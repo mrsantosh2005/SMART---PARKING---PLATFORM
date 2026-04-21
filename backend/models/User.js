@@ -30,11 +30,9 @@ const userSchema = new mongoose.Schema({
     default: 'user',
   },
   isApproved: {
-    type: Boolean,
-    default: function() {
-      return this.role === 'user' ? true : false;
-    }
-  },
+  type: Boolean,
+  default: true  // Sabke liye true - automatic approve
+},
   phone: {
     type: String,
     required: [true, 'Please provide a phone number'],

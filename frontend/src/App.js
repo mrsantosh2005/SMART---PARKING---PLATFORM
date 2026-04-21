@@ -1,9 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider, useAuth } from './context/AuthContext';
+import { AuthProvider } from './context/AuthContext';
+import ProtectedRoute from './components/common/ProtectedRoute';
+import PublicRoute from './components/common/PublicRoute';
 import Navbar from './components/common/Navbar';
-import Login from './components/auth/Login';
+import LoginCSS from './components/auth/LoginCSS';
 import Register from './components/auth/Register';
 import ParkingList from './components/user/ParkingList';
 import ParkingDetail from './components/user/ParkingDetail';
@@ -12,84 +14,121 @@ import OwnerDashboard from './components/owner/OwnerDashboard';
 import AddParking from './components/owner/AddParking';
 import AdminDashboard from './components/admin/AdminDashboard';
 
-const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
-
-function AppContent() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<ParkingList />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/parkings" element={<ParkingList />} />
-        <Route path="/parking/:id" element={<ParkingDetail />} />
-
-        <Route
-          path="/user/bookings"
-          element={
-            <ProtectedRoute allowedRoles={['user']}>
-              <UserBookings />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/owner/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={['owner']}>
-              <OwnerDashboard />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/owner/add-parking"
-          element={
-            <ProtectedRoute allowedRoles={['owner']}>
-              <AddParking />
-            </ProtectedRoute>
-          }
-        />
-
-        <Route
-          path="/admin/dashboard"
-          element={
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </div>
-  );
-}
-
 function App() {
   return (
     <Router>
       <AuthProvider>
         <Toaster position="top-right" />
-        <AppContent />
+        
+        {/* Main App Content */}
+        <Routes>
+          {/* Public Routes - Login ke liye */}
+          <Route 
+            path="/login" 
+            element={
+              <PublicRoute>
+                <LoginCSS />
+              </PublicRoute>
+            } 
+          />
+          
+          <Route 
+            path="/register" 
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            } 
+          />
+
+          {/* Protected Routes - Login ke baad hi dikhenge */}
+          <Route 
+            path="/" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ParkingList />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/parkings" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ParkingList />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/parking/:id" 
+            element={
+              <ProtectedRoute>
+                <>
+                  <Navbar />
+                  <ParkingDetail />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* User Routes */}
+          <Route 
+            path="/user/bookings" 
+            element={
+              <ProtectedRoute allowedRoles={['user']}>
+                <>
+                  <Navbar />
+                  <UserBookings />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Owner Routes */}
+          <Route 
+            path="/owner/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['owner']}>
+                <>
+                  <Navbar />
+                  <OwnerDashboard />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+          
+          <Route 
+            path="/owner/add-parking" 
+            element={
+              <ProtectedRoute allowedRoles={['owner']}>
+                <>
+                  <Navbar />
+                  <AddParking />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+
+          {/* Admin Routes */}
+          <Route 
+            path="/admin/dashboard" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <>
+                  <Navbar />
+                  <AdminDashboard />
+                </>
+              </ProtectedRoute>
+            } 
+          />
+        </Routes>
       </AuthProvider>
     </Router>
   );
