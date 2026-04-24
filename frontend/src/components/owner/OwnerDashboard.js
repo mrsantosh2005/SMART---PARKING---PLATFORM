@@ -6,7 +6,7 @@ import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus } from 'react-icons/fa
 import toast from 'react-hot-toast';
 
 const OwnerDashboard = () => {
-  const [parkings, setParkings] = useState([]);
+  const [parkings, setParkings] = useState([]);  // ✅ Ye line add karo
   const [selectedParking, setSelectedParking] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +29,7 @@ const OwnerDashboard = () => {
 
   const loadParkings = async () => {
     try {
+      setLoading(true);
       const data = await parkingService.getMyParkings();
       setParkings(data.data);
       if (data.data.length > 0) {
@@ -36,6 +37,7 @@ const OwnerDashboard = () => {
       }
       calculateStats(data.data);
     } catch (error) {
+      console.error('Load parkings error:', error);
       toast.error('Failed to load parkings');
     } finally {
       setLoading(false);
@@ -46,18 +48,29 @@ const OwnerDashboard = () => {
     try {
       const data = await bookingService.getParkingBookings(parkingId);
       setBookings(data.data);
+      
+      // Calculate stats from real data
+      const totalRevenue = data.data.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
+      const activeBookings = data.data.filter(b => b.status === 'confirmed').length;
+      
+      setStats(prev => ({
+        ...prev,
+        totalBookings: data.data.length,
+        totalRevenue: totalRevenue,
+        activeBookings: activeBookings
+      }));
     } catch (error) {
+      console.error('Load bookings error:', error);
       toast.error('Failed to load bookings');
     }
   };
 
   const calculateStats = (parkingsData) => {
-    // This would normally come from an API
     setStats({
       totalParkings: parkingsData.length,
-      totalBookings: 45, // Mock data
-      totalRevenue: 1250, // Mock data
-      activeBookings: 12, // Mock data
+      totalBookings: stats.totalBookings,
+      totalRevenue: stats.totalRevenue,
+      activeBookings: stats.activeBookings,
     });
   };
 
@@ -67,6 +80,7 @@ const OwnerDashboard = () => {
       toast.success('Booking completed successfully');
       loadBookings(selectedParking);
     } catch (error) {
+      console.error('Complete booking error:', error);
       toast.error('Failed to complete booking');
     }
   };
@@ -118,7 +132,7 @@ const OwnerDashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-gray-500 text-sm">Total Revenue</p>
-              <p className="text-3xl font-bold">${stats.totalRevenue}</p>
+              <p className="text-3xl font-bold">₹{stats.totalRevenue}</p>
             </div>
             <FaDollarSign className="text-4xl text-yellow-600 opacity-50" />
           </div>
@@ -174,7 +188,7 @@ const OwnerDashboard = () => {
       )}
 
       {/* Bookings Table */}
-      {selectedParking && (
+      {selectedParking && parkings.length > 0 && (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-xl font-semibold">Recent Bookings</h2>
@@ -183,55 +197,34 @@ const OwnerDashboard = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    User
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Vehicle
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Time
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Amount
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Action
-                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Vehicle</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Time</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {bookings.map((booking) => (
                   <tr key={booking._id}>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {booking.userId.name}
-                      </div>
-                      <div className="text-sm text-gray-500">
-                        {booking.userId.phone}
-                      </div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm font-medium text-gray-900">{booking.userId?.name}</div>
+                      <div className="text-sm text-gray-500">{booking.userId?.phone}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {booking.vehicleType} - {booking.vehicleNumber}
-                      </div>
+                    <td className="px-6 py-4">
+                      <div className="text-sm text-gray-900">{booking.vehicleType} - {booking.vehicleNumber}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4">
                       <div className="text-sm text-gray-900">
                         {new Date(booking.startTime).toLocaleDateString()}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {new Date(booking.startTime).toLocaleTimeString()} -{' '}
-                        {new Date(booking.endTime).toLocaleTimeString()}
+                        {new Date(booking.startTime).toLocaleTimeString()} - {new Date(booking.endTime).toLocaleTimeString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      ${booking.totalAmount}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td className="px-6 py-4 text-sm text-gray-900">₹{booking.totalAmount}</td>
+                    <td className="px-6 py-4">
                       <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
                         booking.status === 'completed' ? 'bg-green-100 text-green-800' :
                         booking.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
@@ -241,7 +234,7 @@ const OwnerDashboard = () => {
                         {booking.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                    <td className="px-6 py-4 text-sm font-medium">
                       {booking.status === 'confirmed' && (
                         <button
                           onClick={() => handleCompleteBooking(booking._id)}
@@ -253,6 +246,13 @@ const OwnerDashboard = () => {
                     </td>
                   </tr>
                 ))}
+                {bookings.length === 0 && (
+                  <tr>
+                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">
+                      No bookings found for this parking location.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>

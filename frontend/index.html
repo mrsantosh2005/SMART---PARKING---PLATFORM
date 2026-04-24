@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<body>
+    <div id="map" style="height: 500px;"></div>
+    <script>
+  // Map create
+  var map = L.map('map').setView([16.7050, 74.2433], 13); // Kolhapur location
+
+  // OpenStreetMap layer
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap'
+  }).addTo(map);
+
+  // Marker add
+  var marker = L.marker([16.7050, 74.2433]).addTo(map);
+  marker.bindPopup("MotoRent Location 🚀").openPopup();
+</script>
+    
+</body>
+</html>
