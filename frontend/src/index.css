@@ -287,3 +287,45 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(135deg, #5a67d8, #6b46c1);
 }
+/* Electric Border Animation */
+/* Electric Border Styles */
+.electric-border-wrapper {
+  position: relative;
+  border-radius: inherit;
+}
+
+.electric-border-animation,
+.electric-border-hover {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+  pointer-events: none;
+}
+
+.electric-border-wrapper:hover .electric-border-animation {
+  opacity: 0.05;
+}
+
+.electric-border-wrapper:hover .electric-border-hover {
+  opacity: 0.3;
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+/* Ballpit Canvas Styles */
+canvas {
+  pointer-events: auto;
+}
+
+/* Glassmorphism Effect for Content */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
