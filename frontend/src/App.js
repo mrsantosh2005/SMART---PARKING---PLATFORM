@@ -13,6 +13,19 @@ import OwnerDashboard from './components/owner/OwnerDashboard';
 import AddParking from './components/owner/AddParking';
 import AdminDashboard from './components/admin/AdminDashboard';
 
+// Dashboard Redirect Component
+const DashboardRedirect = () => {
+  const { user } = useAuth();
+  
+  if (user?.role === 'admin') {
+    return <Navigate to="/admin/dashboard" replace />;
+  } else if (user?.role === 'owner') {
+    return <Navigate to="/owner/dashboard" replace />;
+  } else {
+    return <Navigate to="/user/bookings" replace />;
+  }
+};
+
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, loading } = useAuth();
@@ -75,6 +88,9 @@ const AppContent = () => {
           <Route path="/parkings" element={<ProtectedRoute><ParkingList /></ProtectedRoute>} />
           <Route path="/parking/:id" element={<ProtectedRoute><ParkingDetail /></ProtectedRoute>} />
           
+          {/* Dashboard Route - NEW */}
+          <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
+          
           {/* User Routes */}
           <Route path="/user/bookings" element={<ProtectedRoute allowedRoles={['user']}><UserBookings /></ProtectedRoute>} />
 
@@ -93,7 +109,12 @@ const AppContent = () => {
 // Main App Component
 function App() {
   return (
-    <Router>
+    <Router
+      future={{
+        v7_startTransition: true,
+        v7_relativeSplatPath: true,
+      }}
+    >
       <AuthProvider>
         <Toaster 
           position="top-right"

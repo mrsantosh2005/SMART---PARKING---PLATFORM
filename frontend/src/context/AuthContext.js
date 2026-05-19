@@ -22,7 +22,7 @@ export const AuthProvider = ({ children }) => {
         const res = await api.get('/auth/me');
         setUser(res.data.user);
       } catch (err) {
-        console.error('Token expired or invalid');
+        console.error('Token invalid');
         localStorage.removeItem('token');
         delete api.defaults.headers.common['Authorization'];
       }
@@ -52,14 +52,32 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
+      console.log('Login attempt:', email);
+      
       const res = await api.post('/auth/login', { email, password });
-      localStorage.setItem('token', res.data.token);
-      api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
-      setUser(res.data.user);
-      toast.success('Login successful!');
-      return { success: true };
+      
+      console.log('Login response:', res.data);
+      
+      if (res.data.success) {
+        localStorage.setItem('token', res.data.token);
+        api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
+        setUser(res.data.user);
+        toast.success('Login successful!');
+        return { success: true };
+      } else {
+        toast.error(res.data.error || 'Login failed');
+        return { success: false };
+      }
     } catch (err) {
-      toast.error(err.response?.data?.error || 'Login failed');
+      console.error('Login error:', err.response?.data || err.message);
+      
+      if (err.response?.status === 401) {
+        toast.error('Invalid email or password');
+      } else if (err.code === 'ERR_NETWORK') {
+        toast.error('Cannot connect to server. Make sure backend is running on port 5001');
+      } else {
+        toast.error(err.response?.data?.error || 'Login failed');
+      }
       return { success: false };
     }
   };

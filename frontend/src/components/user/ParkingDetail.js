@@ -153,7 +153,7 @@ const ParkingDetail = () => {
                   <span className="font-semibold">Price</span>
                 </div>
                 <p className="text-2xl font-bold text-yellow-600">
-                  ${parking.pricePerHour}/hour
+                  ₹{parking.pricePerHour}
                 </p>
               </div>
             </div>
