@@ -1,10 +1,14 @@
 const Parking = require('../models/Parking');
 const User = require('../models/User');
 
+// @desc    Add parking location
+// @route   POST /api/parking
+// @access  Private (Owner only)
 exports.addParking = async (req, res) => {
   try {
     const { name, address, latitude, longitude, totalCarSlots, totalBikeSlots, pricePerHour } = req.body;
 
+    // Check if owner is approved
     const owner = await User.findById(req.user.id);
     if (!owner.isApproved) {
       return res.status(403).json({
@@ -41,6 +45,9 @@ exports.addParking = async (req, res) => {
   }
 };
 
+// @desc    Get all parking locations (with nearby search)
+// @route   GET /api/parking
+// @access  Public
 exports.getParkings = async (req, res) => {
   try {
     const { lat, lng, radius = 5000 } = req.query;
@@ -75,6 +82,9 @@ exports.getParkings = async (req, res) => {
   }
 };
 
+// @desc    Get single parking
+// @route   GET /api/parking/:id
+// @access  Public
 exports.getParking = async (req, res) => {
   try {
     const parking = await Parking.findById(req.params.id).populate('ownerId', 'name email');
@@ -99,6 +109,9 @@ exports.getParking = async (req, res) => {
   }
 };
 
+// @desc    Update parking
+// @route   PUT /api/parking/:id
+// @access  Private (Owner only)
 exports.updateParking = async (req, res) => {
   try {
     let parking = await Parking.findById(req.params.id);
@@ -115,6 +128,18 @@ exports.updateParking = async (req, res) => {
         success: false,
         error: 'Not authorized to update this parking',
       });
+    }
+
+    const { totalCarSlots, totalBikeSlots, pricePerHour } = req.body;
+    
+    if (totalCarSlots !== undefined) {
+      const difference = totalCarSlots - parking.totalCarSlots;
+      req.body.availableCarSlots = Math.max(0, parking.availableCarSlots + difference);
+    }
+    
+    if (totalBikeSlots !== undefined) {
+      const difference = totalBikeSlots - parking.totalBikeSlots;
+      req.body.availableBikeSlots = Math.max(0, parking.availableBikeSlots + difference);
     }
 
     parking = await Parking.findByIdAndUpdate(req.params.id, req.body, {
@@ -135,9 +160,52 @@ exports.updateParking = async (req, res) => {
   }
 };
 
+// @desc    Delete parking (Soft delete)
+// @route   DELETE /api/parking/:id
+// @access  Private (Owner only)
+exports.deleteParking = async (req, res) => {
+  try {
+    let parking = await Parking.findById(req.params.id);
+
+    if (!parking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Parking not found',
+      });
+    }
+
+    // Check ownership
+    if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to delete this parking',
+      });
+    }
+
+    // Soft delete - set isActive to false
+    parking.isActive = false;
+    await parking.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Parking deleted successfully',
+      data: parking,
+    });
+  } catch (error) {
+    console.error('Delete parking error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to delete parking',
+    });
+  }
+};
+
+// @desc    Get owner's parkings
+// @route   GET /api/parking/owner/my-parkings
+// @access  Private (Owner only)
 exports.getMyParkings = async (req, res) => {
   try {
-    const parkings = await Parking.find({ ownerId: req.user.id });
+    const parkings = await Parking.find({ ownerId: req.user.id, isActive: true });
 
     res.status(200).json({
       success: true,

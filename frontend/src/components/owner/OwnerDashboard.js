@@ -2,11 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
-import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus } from 'react-icons/fa';
+import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const OwnerDashboard = () => {
-  const [parkings, setParkings] = useState([]);  // ✅ Ye line add karo
+  const [parkings, setParkings] = useState([]);
   const [selectedParking, setSelectedParking] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -49,7 +49,6 @@ const OwnerDashboard = () => {
       const data = await bookingService.getParkingBookings(parkingId);
       setBookings(data.data);
       
-      // Calculate stats from real data
       const totalRevenue = data.data.reduce((sum, b) => sum + (b.totalAmount || 0), 0);
       const activeBookings = data.data.filter(b => b.status === 'confirmed').length;
       
@@ -66,12 +65,10 @@ const OwnerDashboard = () => {
   };
 
   const calculateStats = (parkingsData) => {
-    setStats({
+    setStats(prev => ({
+      ...prev,
       totalParkings: parkingsData.length,
-      totalBookings: stats.totalBookings,
-      totalRevenue: stats.totalRevenue,
-      activeBookings: stats.activeBookings,
-    });
+    }));
   };
 
   const handleCompleteBooking = async (bookingId) => {
@@ -79,6 +76,7 @@ const OwnerDashboard = () => {
       await bookingService.completeBooking(bookingId);
       toast.success('Booking completed successfully');
       loadBookings(selectedParking);
+      loadParkings();
     } catch (error) {
       console.error('Complete booking error:', error);
       toast.error('Failed to complete booking');
@@ -95,11 +93,15 @@ const OwnerDashboard = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Header */}
       <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold">Owner Dashboard</h1>
+        <div>
+          <h1 className="text-3xl font-bold text-gray-800">Owner Dashboard</h1>
+          <p className="text-gray-500 mt-1">Manage your parking spaces and track bookings</p>
+        </div>
         <Link
           to="/owner/add-parking"
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
+          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
         >
           <FaPlus className="mr-2" />
           Add New Parking
@@ -108,73 +110,80 @@ const OwnerDashboard = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Parkings</p>
+              <p className="text-blue-100 text-sm">Total Parkings</p>
               <p className="text-3xl font-bold">{stats.totalParkings}</p>
             </div>
-            <FaParking className="text-4xl text-blue-600 opacity-50" />
+            <FaParking className="text-4xl text-white/50" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Bookings</p>
+              <p className="text-green-100 text-sm">Total Bookings</p>
               <p className="text-3xl font-bold">{stats.totalBookings}</p>
             </div>
-            <FaCalendarCheck className="text-4xl text-green-600 opacity-50" />
+            <FaCalendarCheck className="text-4xl text-white/50" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Total Revenue</p>
+              <p className="text-yellow-100 text-sm">Total Revenue</p>
               <p className="text-3xl font-bold">₹{stats.totalRevenue}</p>
             </div>
-            <FaDollarSign className="text-4xl text-yellow-600 opacity-50" />
+            <FaDollarSign className="text-4xl text-white/50" />
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
+        <div className="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-gray-500 text-sm">Active Bookings</p>
+              <p className="text-purple-100 text-sm">Active Bookings</p>
               <p className="text-3xl font-bold">{stats.activeBookings}</p>
             </div>
-            <FaCalendarCheck className="text-4xl text-purple-600 opacity-50" />
+            <FaCalendarCheck className="text-4xl text-white/50" />
           </div>
         </div>
       </div>
 
-      {/* Parking Selection */}
+      {/* Parking Selection & Update Button */}
       {parkings.length > 0 ? (
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Select Parking
-          </label>
-          <select
-            className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-            value={selectedParking}
-            onChange={(e) => setSelectedParking(e.target.value)}
-          >
-            {parkings.map((parking) => (
-              <option key={parking._id} value={parking._id}>
-                {parking.name}
-              </option>
-            ))}
-          </select>
+        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row gap-4 items-end">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Select Parking Location
+              </label>
+              <select
+                className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={selectedParking}
+                onChange={(e) => setSelectedParking(e.target.value)}
+              >
+                {parkings.map((parking) => (
+                  <option key={parking._id} value={parking._id}>
+                    {parking.name} - 🚗 Cars: {parking.availableCarSlots}/{parking.totalCarSlots} | 🏍️ Bikes: {parking.availableBikeSlots}/{parking.totalBikeSlots}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {/* Update Button */}
+            <Link
+              to={`/owner/update-parking/${selectedParking}`}
+              className="bg-yellow-500 text-white px-6 py-2 rounded-lg hover:bg-yellow-600 transition flex items-center gap-2"
+            >
+              <FaEdit /> Update Selected Parking
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-8 rounded-r-lg">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-              </svg>
-            </div>
             <div className="ml-3">
               <p className="text-sm text-yellow-700">
                 You haven't added any parking locations yet.{' '}
@@ -187,11 +196,11 @@ const OwnerDashboard = () => {
         </div>
       )}
 
-      {/* Bookings Table */}
+      {/* Recent Bookings Table */}
       {selectedParking && parkings.length > 0 && (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold">Recent Bookings</h2>
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-800">📋 Recent Bookings</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -207,25 +216,33 @@ const OwnerDashboard = () => {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {bookings.map((booking) => (
-                  <tr key={booking._id}>
-                    <td className="px-6 py-4">
+                  <tr key={booking._id} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">{booking.userId?.name}</div>
                       <div className="text-sm text-gray-500">{booking.userId?.phone}</div>
                     </td>
-                    <td className="px-6 py-4">
-                      <div className="text-sm text-gray-900">{booking.vehicleType} - {booking.vehicleNumber}</div>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1">
+                        {booking.vehicleType === 'car' ? 
+                          <FaCar className="text-blue-500" /> : 
+                          <FaMotorcycle className="text-green-500" />
+                        }
+                        <span className="text-sm text-gray-900">{booking.vehicleType} - {booking.vehicleNumber}</span>
+                      </div>
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900">
                         {new Date(booking.startTime).toLocaleDateString()}
                       </div>
                       <div className="text-sm text-gray-500">
-                        {new Date(booking.startTime).toLocaleTimeString()} - {new Date(booking.endTime).toLocaleTimeString()}
+                        {new Date(booking.startTime).toLocaleTimeString()}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-900">₹{booking.totalAmount}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
+                      ₹{booking.totalAmount}
+                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${
                         booking.status === 'completed' ? 'bg-green-100 text-green-800' :
                         booking.status === 'confirmed' ? 'bg-blue-100 text-blue-800' :
                         booking.status === 'cancelled' ? 'bg-red-100 text-red-800' :
@@ -233,18 +250,18 @@ const OwnerDashboard = () => {
                       }`}>
                         {booking.status}
                       </span>
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium">
+                     </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
                       {booking.status === 'confirmed' && (
                         <button
                           onClick={() => handleCompleteBooking(booking._id)}
-                          className="text-green-600 hover:text-green-900"
+                          className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition text-sm"
                         >
                           Complete
                         </button>
                       )}
-                    </td>
-                  </tr>
+                     </td>
+                   </tr>
                 ))}
                 {bookings.length === 0 && (
                   <tr>

@@ -12,6 +12,7 @@ import UserBookings from './components/user/UserBookings';
 import OwnerDashboard from './components/owner/OwnerDashboard';
 import AddParking from './components/owner/AddParking';
 import AdminDashboard from './components/admin/AdminDashboard';
+import UpdateParking from './components/owner/UpdateParking';
 
 // Dashboard Redirect Component
 const DashboardRedirect = () => {
@@ -97,6 +98,14 @@ const AppContent = () => {
           {/* Owner Routes */}
           <Route path="/owner/dashboard" element={<ProtectedRoute allowedRoles={['owner']}><OwnerDashboard /></ProtectedRoute>} />
           <Route path="/owner/add-parking" element={<ProtectedRoute allowedRoles={['owner']}><AddParking /></ProtectedRoute>} />
+          <Route 
+            path="/owner/update-parking/:id" 
+            element={
+              <ProtectedRoute allowedRoles={['owner']}>
+                <UpdateParking />
+              </ProtectedRoute>
+            } 
+          />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
