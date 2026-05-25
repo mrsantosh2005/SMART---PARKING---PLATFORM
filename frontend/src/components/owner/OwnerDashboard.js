@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
-import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit, FaQrcode } from 'react-icons/fa';
+import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit, FaQrcode, FaIdCard } from 'react-icons/fa';
 import QRScanner from './QRScanner';
 import toast from 'react-hot-toast';
 
@@ -115,6 +115,14 @@ const OwnerDashboard = () => {
           <p className="text-gray-500 mt-1">Manage your parking spaces and track bookings</p>
         </div>
         <div className="flex gap-3">
+          {/* KYC Verification Button */}
+          <Link
+            to="/owner/kyc"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+          >
+            <FaIdCard /> Verify KYC
+          </Link>
+
           {/* QR Scanner Toggle Button */}
           <button
             onClick={() => setShowScanner(!showScanner)}

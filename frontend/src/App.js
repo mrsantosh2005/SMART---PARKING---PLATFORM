@@ -13,7 +13,9 @@ import OwnerDashboard from './components/owner/OwnerDashboard';
 import AddParking from './components/owner/AddParking';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UpdateParking from './components/owner/UpdateParking';
-import LandingPage from './pages/LandingPage';  // ✅ Added LandingPage import
+import LandingPage from './pages/LandingPage';
+import KYCForm from './components/owner/KYCForm';
+import KYCApproval from './components/admin/KYCApproval';
 
 // Dashboard Redirect Component
 const DashboardRedirect = () => {
@@ -64,7 +66,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (user) {
-    return <Navigate to="/home" replace />;  // ✅ Changed from "/" to "/home"
+    return <Navigate to="/home" replace />;
   }
 
   return children;
@@ -83,10 +85,10 @@ const AppContent = () => {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           
-          {/* ✅ LANDING PAGE - First screen users see */}
+          {/* LANDING PAGE - First screen users see */}
           <Route path="/" element={<LandingPage />} />
           
-          {/* ✅ HOME PAGE - After login (Protected) */}
+          {/* HOME PAGE - After login (Protected) */}
           <Route path="/home" element={<ProtectedRoute><ParkingList /></ProtectedRoute>} />
           
           {/* Public Auth Routes */}
@@ -114,6 +116,10 @@ const AppContent = () => {
               </ProtectedRoute>
             } 
           />
+          
+          {/* KYC Routes */}
+          <Route path="/owner/kyc" element={<ProtectedRoute allowedRoles={['owner']}><KYCForm /></ProtectedRoute>} />
+          <Route path="/admin/kyc" element={<ProtectedRoute allowedRoles={['admin']}><KYCApproval /></ProtectedRoute>} />
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />

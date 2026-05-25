@@ -3,6 +3,8 @@ const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
 const connectDB = require('./config/database');
+const kycRoutes = require('./routes/kycRoutes');
+
 
 dotenv.config();
 connectDB();
@@ -39,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/parking', parkingRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/kyc', kycRoutes);
 
 app.use((req, res) => {
   res.status(404).json({
