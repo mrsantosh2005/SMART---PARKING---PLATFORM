@@ -13,6 +13,7 @@ import OwnerDashboard from './components/owner/OwnerDashboard';
 import AddParking from './components/owner/AddParking';
 import AdminDashboard from './components/admin/AdminDashboard';
 import UpdateParking from './components/owner/UpdateParking';
+import LandingPage from './pages/LandingPage';  // ✅ Added LandingPage import
 
 // Dashboard Redirect Component
 const DashboardRedirect = () => {
@@ -63,7 +64,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/home" replace />;  // ✅ Changed from "/" to "/home"
   }
 
   return children;
@@ -75,21 +76,28 @@ const AppContent = () => {
   const location = useLocation();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {user && <Navbar />}
+    <div className="min-h-screen">
+      {/* Show Navbar only on protected pages (not on landing page) */}
+      {user && location.pathname !== '/' && <Navbar />}
       
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          {/* Public Routes */}
+          
+          {/* ✅ LANDING PAGE - First screen users see */}
+          <Route path="/" element={<LandingPage />} />
+          
+          {/* ✅ HOME PAGE - After login (Protected) */}
+          <Route path="/home" element={<ProtectedRoute><ParkingList /></ProtectedRoute>} />
+          
+          {/* Public Auth Routes */}
           <Route path="/login" element={<PublicRoute><LoginCSS /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
 
           {/* Protected Routes */}
-          <Route path="/" element={<ProtectedRoute><ParkingList /></ProtectedRoute>} />
           <Route path="/parkings" element={<ProtectedRoute><ParkingList /></ProtectedRoute>} />
           <Route path="/parking/:id" element={<ProtectedRoute><ParkingDetail /></ProtectedRoute>} />
           
-          {/* Dashboard Route - NEW */}
+          {/* Dashboard Route */}
           <Route path="/dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
           
           {/* User Routes */}
@@ -109,6 +117,9 @@ const AppContent = () => {
 
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
+          
+          {/* Catch all - 404 redirect to landing page */}
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AnimatePresence>
     </div>
@@ -133,6 +144,12 @@ function App() {
               background: '#363636',
               color: '#fff',
               borderRadius: '12px',
+            },
+            success: {
+              iconTheme: { primary: '#10b981', secondary: '#fff' },
+            },
+            error: {
+              iconTheme: { primary: '#ef4444', secondary: '#fff' },
             },
           }}
         />
