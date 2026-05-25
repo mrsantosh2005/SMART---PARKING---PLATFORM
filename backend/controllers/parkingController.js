@@ -2,13 +2,10 @@ const Parking = require('../models/Parking');
 const User = require('../models/User');
 
 // @desc    Add parking location
-// @route   POST /api/parking
-// @access  Private (Owner only)
 exports.addParking = async (req, res) => {
   try {
     const { name, address, latitude, longitude, totalCarSlots, totalBikeSlots, pricePerHour } = req.body;
 
-    // Check if owner is approved
     const owner = await User.findById(req.user.id);
     if (!owner.isApproved) {
       return res.status(403).json({
@@ -45,14 +42,32 @@ exports.addParking = async (req, res) => {
   }
 };
 
-// @desc    Get all parking locations (with nearby search)
-// @route   GET /api/parking
-// @access  Public
+// @desc    Get all parking locations (ONLY from verified owners)
 exports.getParkings = async (req, res) => {
   try {
     const { lat, lng, radius = 5000 } = req.query;
 
-    let query = { isActive: true };
+    const verifiedOwners = await User.find({
+      role: 'owner',
+      isVerified: true,
+      isApproved: true
+    }).select('_id');
+
+    const verifiedOwnerIds = verifiedOwners.map(owner => owner._id);
+
+    if (verifiedOwnerIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: [],
+        message: 'No verified parking owners yet'
+      });
+    }
+
+    let query = { 
+      isActive: true,
+      ownerId: { $in: verifiedOwnerIds }
+    };
 
     if (lat && lng) {
       query.location = {
@@ -66,7 +81,8 @@ exports.getParkings = async (req, res) => {
       };
     }
 
-    const parkings = await Parking.find(query).populate('ownerId', 'name email');
+    const parkings = await Parking.find(query)
+      .populate('ownerId', 'name email isVerified verifiedBadge');
 
     res.status(200).json({
       success: true,
@@ -83,16 +99,22 @@ exports.getParkings = async (req, res) => {
 };
 
 // @desc    Get single parking
-// @route   GET /api/parking/:id
-// @access  Public
 exports.getParking = async (req, res) => {
   try {
-    const parking = await Parking.findById(req.params.id).populate('ownerId', 'name email');
+    const parking = await Parking.findById(req.params.id)
+      .populate('ownerId', 'name email isVerified verifiedBadge');
 
     if (!parking) {
       return res.status(404).json({
         success: false,
         error: 'Parking not found',
+      });
+    }
+
+    if (!parking.ownerId.isVerified) {
+      return res.status(403).json({
+        success: false,
+        error: 'This parking is not available. Owner verification pending.',
       });
     }
 
@@ -110,8 +132,6 @@ exports.getParking = async (req, res) => {
 };
 
 // @desc    Update parking
-// @route   PUT /api/parking/:id
-// @access  Private (Owner only)
 exports.updateParking = async (req, res) => {
   try {
     let parking = await Parking.findById(req.params.id);
@@ -160,9 +180,9 @@ exports.updateParking = async (req, res) => {
   }
 };
 
-// @desc    Delete parking (Soft delete)
-// @route   DELETE /api/parking/:id
-// @access  Private (Owner only)
+// ✅ @desc    Delete parking (Soft delete)
+// ✅ @route   DELETE /api/parking/:id
+// ✅ @access  Private (Owner only)
 exports.deleteParking = async (req, res) => {
   try {
     let parking = await Parking.findById(req.params.id);
@@ -174,7 +194,6 @@ exports.deleteParking = async (req, res) => {
       });
     }
 
-    // Check ownership
     if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
@@ -182,7 +201,6 @@ exports.deleteParking = async (req, res) => {
       });
     }
 
-    // Soft delete - set isActive to false
     parking.isActive = false;
     await parking.save();
 
@@ -201,8 +219,6 @@ exports.deleteParking = async (req, res) => {
 };
 
 // @desc    Get owner's parkings
-// @route   GET /api/parking/owner/my-parkings
-// @access  Private (Owner only)
 exports.getMyParkings = async (req, res) => {
   try {
     const parkings = await Parking.find({ ownerId: req.user.id, isActive: true });

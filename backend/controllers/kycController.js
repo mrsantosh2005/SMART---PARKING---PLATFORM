@@ -172,7 +172,7 @@ exports.verifyKYC = async (req, res) => {
     
     if (approved) {
       user.kycStatus = 'verified';
-      user.isVerified = true;
+      user.isVerified = true;  // ✅ CRITICAL: Owner verified
       user.kycVerifiedAt = Date.now();
       user.kycRejectionReason = null;
       user.verifiedBadge = verifiedBadge || 'basic';
@@ -195,7 +195,7 @@ exports.verifyKYC = async (req, res) => {
       
     } else {
       user.kycStatus = 'rejected';
-      user.isVerified = false;
+      user.isVerified = false;  // ❌ Not verified
       user.kycRejectionReason = rejectionReason || 'Documents are not valid';
     }
     

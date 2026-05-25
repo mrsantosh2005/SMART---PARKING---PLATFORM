@@ -2,23 +2,28 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { parkingService } from '../../services/parkingService';
-import ParkingImage from '../common/ParkingImage'; // ✅ Single import
-import { FaCar, FaMotorcycle, FaMapMarkerAlt, FaDollarSign, FaSearch } from 'react-icons/fa';
+import { FaCar, FaMotorcycle, FaMapMarkerAlt, FaDollarSign, FaSearch, FaShieldAlt } from 'react-icons/fa';
 import { BiCurrentLocation } from 'react-icons/bi';
 import toast from 'react-hot-toast';
 
-// Animation variants
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 }
-  }
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+// Helper function to get verified badge
+const getVerifiedBadge = (owner) => {
+  if (!owner?.isVerified) return null;
+  
+  const badges = {
+    platinum: { color: 'bg-purple-100 text-purple-800', icon: '👑', text: 'Platinum Verified' },
+    gold: { color: 'bg-yellow-100 text-yellow-800', icon: '🥇', text: 'Gold Verified' },
+    silver: { color: 'bg-gray-100 text-gray-800', icon: '🥈', text: 'Silver Verified' },
+    basic: { color: 'bg-blue-100 text-blue-800', icon: '✅', text: 'Verified' }
+  };
+  
+  const badge = badges[owner.verifiedBadge] || badges.basic;
+  
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
+      <span>{badge.icon}</span> {badge.text}
+    </span>
+  );
 };
 
 const ParkingList = () => {
@@ -115,70 +120,64 @@ const ParkingList = () => {
         </div>
       </div>
 
-      {/* Parking Grid with Images */}
-      <motion.div 
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
+      {/* Parking Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {parkings.map((parking) => (
-          <motion.div key={parking._id} variants={cardVariants} whileHover={{ y: -8 }}>
-            <div className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
-              {/* ✅ Parking Image - Properly integrated */}
-              <div className="h-48 overflow-hidden relative">
-                <ParkingImage 
-                  parkingId={parking._id}
-                  name={parking.name}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
-                />
-                {/* Price Badge */}
-                <div className="absolute top-4 right-4 bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                  ${parking.pricePerHour}/hour
-                </div>
-                {/* Availability Badge */}
-                <div className="absolute bottom-4 left-4 bg-black/60 backdrop-blur-sm text-white px-3 py-1 rounded-full text-xs">
-                  {parking.availableCarSlots + parking.availableBikeSlots} spots left
-                </div>
+          <div key={parking._id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+            <div className="p-5">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-xl font-bold text-gray-800">{parking.name}</h3>
+                {/* ✅ Verified Badge Display */}
+                {getVerifiedBadge(parking.ownerId)}
               </div>
               
-              {/* Content */}
-              <div className="p-5">
-                <h3 className="text-xl font-bold mb-2">{parking.name}</h3>
-                <div className="flex items-center text-gray-500 text-sm mb-4">
-                  <FaMapMarkerAlt className="mr-1 flex-shrink-0" />
-                  <span>{parking.address}</span>
-                </div>
-
-                {/* Slot Availability */}
-                <div className="flex justify-between mb-4">
-                  <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
-                    <FaCar className="text-blue-600" />
-                    <span className="text-sm font-medium">{parking.availableCarSlots}/{parking.totalCarSlots}</span>
-                  </div>
-                  <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full">
-                    <FaMotorcycle className="text-green-600" />
-                    <span className="text-sm font-medium">{parking.availableBikeSlots}/{parking.totalBikeSlots}</span>
-                  </div>
-                </div>
-
-                {/* View Details Button */}
-                <Link
-                  to={`/parking/${parking._id}`}
-                  className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
-                >
-                  View Details →
-                </Link>
+              <div className="flex items-center text-gray-500 text-sm mb-4">
+                <FaMapMarkerAlt className="mr-1 flex-shrink-0" />
+                <span>{parking.address}</span>
               </div>
+
+              {/* Slot Availability */}
+              <div className="flex justify-between mb-4">
+                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
+                  <FaCar className="text-blue-600" />
+                  <span className="text-sm font-medium">{parking.availableCarSlots}/{parking.totalCarSlots}</span>
+                </div>
+                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full">
+                  <FaMotorcycle className="text-green-600" />
+                  <span className="text-sm font-medium">{parking.availableBikeSlots}/{parking.totalBikeSlots}</span>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center">
+                  <FaDollarSign className="text-yellow-600" />
+                  <span className="text-2xl font-bold text-blue-600">₹{parking.pricePerHour}</span>
+                  <span className="text-gray-500">/hour</span>
+                </div>
+                {/* Trust Badge */}
+                {parking.ownerId?.isVerified && (
+                  <div className="flex items-center gap-1 text-xs text-green-600">
+                    <FaShieldAlt /> Trusted
+                  </div>
+                )}
+              </div>
+
+              <Link
+                to={`/parking/${parking._id}`}
+                className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
+              >
+                View Details →
+              </Link>
             </div>
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
+      </div>
 
       {parkings.length === 0 && (
         <div className="text-center py-12">
           <div className="text-6xl mb-4">🅿️</div>
           <p className="text-gray-500 text-lg">No parking spaces found in this area.</p>
+          <p className="text-gray-400 text-sm mt-2">Only verified parking owners are shown here.</p>
           <button
             onClick={getUserLocation}
             className="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg"

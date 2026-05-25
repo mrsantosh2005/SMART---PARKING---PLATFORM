@@ -119,9 +119,16 @@ const AppContent = () => {
           
           {/* KYC Routes */}
           <Route path="/owner/kyc" element={<ProtectedRoute allowedRoles={['owner']}><KYCForm /></ProtectedRoute>} />
-          <Route path="/admin/kyc" element={<ProtectedRoute allowedRoles={['admin']}><KYCApproval /></ProtectedRoute>} />
-
+          
           {/* Admin Routes */}
+          <Route 
+            path="/admin/kyc" 
+            element={
+              <ProtectedRoute allowedRoles={['admin']}>
+                <KYCApproval />
+              </ProtectedRoute>
+            } 
+          />
           <Route path="/admin/dashboard" element={<ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>} />
           
           {/* Catch all - 404 redirect to landing page */}

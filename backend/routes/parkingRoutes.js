@@ -12,30 +12,19 @@ const { protect, authorize, checkOwnerApproval } = require('../middleware/auth')
 const { validateParking, checkValidation } = require('../middleware/validation');
 
 // =============================================
-// PUBLIC ROUTES (No authentication required)
+// PUBLIC ROUTES
 // =============================================
-
-// @route   GET /api/parking
-// @desc    Get all parkings (with nearby search)
-// @access  Public
 router.get('/', getParkings);
+router.get('/:id', getParking);
 
 // =============================================
-// OWNER SPECIFIC ROUTES (Authentication required)
+// OWNER SPECIFIC ROUTES
 // =============================================
-
-// @route   GET /api/parking/owner/my-parkings
-// @desc    Get all parkings of logged in owner
-// @access  Private (Owner only)
 router.get('/owner/my-parkings', protect, authorize('owner'), getMyParkings);
 
 // =============================================
-// PROTECTED ROUTES (Authentication + Authorization)
+// PROTECTED ROUTES
 // =============================================
-
-// @route   POST /api/parking
-// @desc    Add new parking location
-// @access  Private (Owner/Admin only)
 router.post(
   '/',
   protect,
@@ -46,23 +35,19 @@ router.post(
   addParking
 );
 
-// =============================================
-// PARKING BY ID ROUTES (Combined using router.route)
-// =============================================
+router.put(
+  '/:id',
+  protect,
+  authorize('owner', 'admin'),
+  updateParking
+);
 
-// @route   GET /api/parking/:id
-// @desc    Get single parking by ID
-// @access  Public
-// @route   PUT /api/parking/:id
-// @desc    Update parking location
-// @access  Private (Owner/Admin only)
-// @route   DELETE /api/parking/:id
-// @desc    Delete parking location (soft delete)
-// @access  Private (Owner/Admin only)
-router
-  .route('/:id')
-  .get(getParking)
-  .put(protect, authorize('owner', 'admin'), updateParking)
-  .delete(protect, authorize('owner', 'admin'), deleteParking);
+// ✅ Add this delete route
+router.delete(
+  '/:id',
+  protect,
+  authorize('owner', 'admin'),
+  deleteParking
+);
 
 module.exports = router;

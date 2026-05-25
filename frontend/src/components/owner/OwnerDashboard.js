@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
-import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit, FaQrcode, FaIdCard } from 'react-icons/fa';
+import { kycService } from '../../services/kycService';
+import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit, FaQrcode, FaIdCard, FaShieldAlt, FaCheckCircle, FaExclamationTriangle } from 'react-icons/fa';
 import QRScanner from './QRScanner';
 import toast from 'react-hot-toast';
 
@@ -12,6 +13,7 @@ const OwnerDashboard = () => {
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showScanner, setShowScanner] = useState(false);
+  const [kycInfo, setKycInfo] = useState(null);
   const [stats, setStats] = useState({
     totalParkings: 0,
     totalBookings: 0,
@@ -21,6 +23,7 @@ const OwnerDashboard = () => {
 
   useEffect(() => {
     loadParkings();
+    loadKYCInfo();
   }, []);
 
   useEffect(() => {
@@ -43,6 +46,15 @@ const OwnerDashboard = () => {
       toast.error('Failed to load parkings');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadKYCInfo = async () => {
+    try {
+      const response = await kycService.getKYCStatus();
+      setKycInfo(response.data);
+    } catch (error) {
+      console.error('Error loading KYC info:', error);
     }
   };
 
@@ -186,6 +198,42 @@ const OwnerDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* KYC Status Card */}
+      {kycInfo && !kycInfo.isVerified && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6 rounded-r-lg">
+          <div className="flex items-center">
+            <FaExclamationTriangle className="text-yellow-400 text-xl mr-3" />
+            <div>
+              <p className="text-sm text-yellow-700 font-medium">
+                ⚠️ Your KYC is not verified yet!
+              </p>
+              <p className="text-xs text-yellow-600 mt-1">
+                Your parking spaces will NOT be visible to users until KYC is approved.
+              </p>
+              <Link to="/owner/kyc" className="text-sm font-medium text-yellow-700 underline mt-1 inline-block">
+                Complete KYC Verification →
+              </Link>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {kycInfo?.isVerified && (
+        <div className="bg-green-50 border-l-4 border-green-400 p-4 mb-6 rounded-r-lg">
+          <div className="flex items-center">
+            <FaCheckCircle className="text-green-400 text-xl mr-3" />
+            <div>
+              <p className="text-sm text-green-700 font-medium">
+                ✅ KYC Verified! Your parking spaces are visible to users.
+              </p>
+              <p className="text-xs text-green-600 mt-1">
+                Verified Badge: {kycInfo.verifiedBadge?.toUpperCase()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* QR Scanner Section */}
       {showScanner && (
