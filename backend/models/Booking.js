@@ -20,6 +20,7 @@ const bookingSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Please provide vehicle number'],
     trim: true,
+    uppercase: true,
   },
   startTime: {
     type: Date,
@@ -32,6 +33,7 @@ const bookingSchema = new mongoose.Schema({
   totalAmount: {
     type: Number,
     required: true,
+    min: 0,
   },
   status: {
     type: String,
@@ -43,10 +45,33 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'completed', 'refunded'],
     default: 'pending',
   },
+  // QR Code related fields
+  qrCode: {
+    type: String,
+    default: null,
+  },
+  qrCodeData: {
+    type: String,
+    default: null,
+  },
+  verifiedAt: {
+    type: Date,
+    default: null,
+  },
+  verifiedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
+
+// Index for faster queries
+bookingSchema.index({ userId: 1, createdAt: -1 });
+bookingSchema.index({ parkingId: 1, createdAt: -1 });
+bookingSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

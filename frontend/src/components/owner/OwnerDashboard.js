@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
-import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit } from 'react-icons/fa';
+import { FaParking, FaCalendarCheck, FaDollarSign, FaPlus, FaCar, FaMotorcycle, FaEdit, FaQrcode } from 'react-icons/fa';
+import QRScanner from './QRScanner';
 import toast from 'react-hot-toast';
 
 const OwnerDashboard = () => {
@@ -10,6 +11,7 @@ const OwnerDashboard = () => {
   const [selectedParking, setSelectedParking] = useState(null);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showScanner, setShowScanner] = useState(false);
   const [stats, setStats] = useState({
     totalParkings: 0,
     totalBookings: 0,
@@ -83,6 +85,19 @@ const OwnerDashboard = () => {
     }
   };
 
+  const handleScanSuccess = (scannedData) => {
+    console.log('Scanned booking:', scannedData);
+    toast.success(`✅ Verified: ${scannedData.userName || 'Customer'}`);
+    
+    // Optional: Auto complete booking after scan
+    if (scannedData.bookingId) {
+      setTimeout(() => {
+        // You can auto-complete or just notify
+        toast.info(`Customer ${scannedData.userName} verified successfully`);
+      }, 1000);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -94,18 +109,31 @@ const OwnerDashboard = () => {
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-8 flex-wrap gap-4">
         <div>
           <h1 className="text-3xl font-bold text-gray-800">Owner Dashboard</h1>
           <p className="text-gray-500 mt-1">Manage your parking spaces and track bookings</p>
         </div>
-        <Link
-          to="/owner/add-parking"
-          className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
-        >
-          <FaPlus className="mr-2" />
-          Add New Parking
-        </Link>
+        <div className="flex gap-3">
+          {/* QR Scanner Toggle Button */}
+          <button
+            onClick={() => setShowScanner(!showScanner)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition ${
+              showScanner ? 'bg-purple-700' : 'bg-purple-600'
+            } text-white hover:bg-purple-700`}
+          >
+            <FaQrcode /> {showScanner ? 'Hide Scanner' : 'Scan QR Code'}
+          </button>
+          
+          {/* Add Parking Button */}
+          <Link
+            to="/owner/add-parking"
+            className="flex items-center bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition"
+          >
+            <FaPlus className="mr-2" />
+            Add New Parking
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -150,6 +178,19 @@ const OwnerDashboard = () => {
           </div>
         </div>
       </div>
+
+      {/* QR Scanner Section */}
+      {showScanner && (
+        <div className="mb-8">
+          <QRScanner 
+            onScanSuccess={handleScanSuccess}
+            onScanError={(err) => {
+              console.error('Scan error:', err);
+              toast.error('Failed to scan QR code');
+            }}
+          />
+        </div>
+      )}
 
       {/* Parking Selection & Update Button */}
       {parkings.length > 0 ? (
@@ -201,6 +242,9 @@ const OwnerDashboard = () => {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           <div className="px-6 py-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
             <h2 className="text-xl font-semibold text-gray-800">📋 Recent Bookings</h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage and track all bookings for this parking location
+            </p>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
@@ -240,7 +284,7 @@ const OwnerDashboard = () => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-900">
                       ₹{booking.totalAmount}
-                     </td>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className={`px-2 inline-flex text-xs font-semibold rounded-full ${
                         booking.status === 'completed' ? 'bg-green-100 text-green-800' :
@@ -250,7 +294,7 @@ const OwnerDashboard = () => {
                       }`}>
                         {booking.status}
                       </span>
-                     </td>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       {booking.status === 'confirmed' && (
                         <button
@@ -260,8 +304,8 @@ const OwnerDashboard = () => {
                           Complete
                         </button>
                       )}
-                     </td>
-                   </tr>
+                    </td>
+                  </tr>
                 ))}
                 {bookings.length === 0 && (
                   <tr>

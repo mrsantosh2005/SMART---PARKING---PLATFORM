@@ -1,6 +1,10 @@
 const Booking = require('../models/Booking');
 const Parking = require('../models/Parking');
+const User = require('../models/User');
 
+// @desc    Create booking
+// @route   POST /api/bookings
+// @access  Private
 exports.createBooking = async (req, res) => {
   try {
     const { parkingId, vehicleType, vehicleNumber, startTime, endTime } = req.body;
@@ -53,10 +57,14 @@ exports.createBooking = async (req, res) => {
   }
 };
 
+// @desc    Get user bookings
+// @route   GET /api/bookings/my-bookings
+// @access  Private
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ userId: req.user.id })
       .populate('parkingId', 'name address pricePerHour')
+      .populate('userId', 'name email phone')
       .sort('-createdAt');
 
     res.status(200).json({
@@ -73,6 +81,9 @@ exports.getMyBookings = async (req, res) => {
   }
 };
 
+// @desc    Get parking bookings (for owner)
+// @route   GET /api/bookings/parking/:parkingId
+// @access  Private (Owner only)
 exports.getParkingBookings = async (req, res) => {
   try {
     const parking = await Parking.findById(req.params.parkingId);
@@ -93,6 +104,7 @@ exports.getParkingBookings = async (req, res) => {
 
     const bookings = await Booking.find({ parkingId: req.params.parkingId })
       .populate('userId', 'name email phone')
+      .populate('parkingId', 'name address pricePerHour')
       .sort('-createdAt');
 
     res.status(200).json({
@@ -109,6 +121,9 @@ exports.getParkingBookings = async (req, res) => {
   }
 };
 
+// @desc    Cancel booking
+// @route   PUT /api/bookings/:id/cancel
+// @access  Private
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
@@ -156,6 +171,9 @@ exports.cancelBooking = async (req, res) => {
   }
 };
 
+// @desc    Complete booking
+// @route   PUT /api/bookings/:id/complete
+// @access  Private (Owner only)
 exports.completeBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id).populate('parkingId');
@@ -187,6 +205,164 @@ exports.completeBooking = async (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to complete booking',
+    });
+  }
+};
+
+// ✅ @desc    Verify booking by QR Code
+// @route   POST /api/bookings/verify
+// @access  Private (Owner/Admin)
+exports.verifyBooking = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking ID is required',
+      });
+    }
+
+    const booking = await Booking.findById(bookingId)
+      .populate('userId', 'name email phone')
+      .populate('parkingId', 'name address pricePerHour');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Check if user is authorized to verify this booking
+    const parking = await Parking.findById(booking.parkingId);
+    if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to verify this booking',
+      });
+    }
+
+    // Check if booking is valid
+    if (booking.status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking has been cancelled',
+      });
+    }
+
+    if (booking.status === 'completed') {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking has already been completed',
+      });
+    }
+
+    // Check if booking time is valid
+    const now = new Date();
+    const startTime = new Date(booking.startTime);
+    const endTime = new Date(booking.endTime);
+
+    if (now < startTime) {
+      return res.status(400).json({
+        success: false,
+        error: `Booking starts at ${startTime.toLocaleString()}. Please come at the scheduled time.`,
+      });
+    }
+
+    if (now > endTime) {
+      return res.status(400).json({
+        success: false,
+        error: 'Booking has expired',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Booking verified successfully',
+      data: {
+        _id: booking._id,
+        user: booking.userId,
+        parking: booking.parkingId,
+        vehicleNumber: booking.vehicleNumber,
+        vehicleType: booking.vehicleType,
+        startTime: booking.startTime,
+        endTime: booking.endTime,
+        totalAmount: booking.totalAmount,
+        status: booking.status,
+      }
+    });
+  } catch (error) {
+    console.error('Verify booking error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to verify booking',
+    });
+  }
+};
+
+// ✅ @desc    Get booking by QR data (Alternative method)
+// @route   POST /api/bookings/verify-qr
+// @access  Private (Owner/Admin)
+exports.verifyQRData = async (req, res) => {
+  try {
+    const { qrData } = req.body;
+
+    if (!qrData) {
+      return res.status(400).json({
+        success: false,
+        error: 'QR data is required',
+      });
+    }
+
+    let parsedData;
+    try {
+      parsedData = typeof qrData === 'string' ? JSON.parse(qrData) : qrData;
+    } catch (e) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid QR code format',
+      });
+    }
+
+    const { bookingId } = parsedData;
+
+    if (!bookingId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid QR code: Booking ID not found',
+      });
+    }
+
+    const booking = await Booking.findById(bookingId)
+      .populate('userId', 'name email phone')
+      .populate('parkingId', 'name address pricePerHour');
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        error: 'Booking not found',
+      });
+    }
+
+    // Check authorization
+    const parking = await Parking.findById(booking.parkingId);
+    if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to verify this booking',
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: booking
+    });
+  } catch (error) {
+    console.error('Verify QR error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to verify QR code',
     });
   }
 };
