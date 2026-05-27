@@ -9,10 +9,15 @@ const kycRoutes = require('./routes/kycRoutes');
 dotenv.config();
 connectDB();
 
+// Add reminder scheduler after database connection
+const { startReminderScheduler } = require('./controllers/reminderController');
+startReminderScheduler();
+
 const authRoutes = require('./routes/authRoutes');
 const parkingRoutes = require('./routes/parkingRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const reminderRoutes = require('./routes/reminderRoutes');
 
 const app = express();
 
@@ -42,6 +47,7 @@ app.use('/api/parking', parkingRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/kyc', kycRoutes);
+app.use('/api/reminders', reminderRoutes);
 
 app.use((req, res) => {
   res.status(404).json({

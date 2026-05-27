@@ -1,11 +1,21 @@
 import api from './api';
 
 export const parkingService = {
-  getParkings: async (lat, lng, radius = 5000) => {
+  getParkings: async (lat, lng, radius = 5000, vehicleType = 'car') => {
     try {
       let url = '/parking';
+      const params = new URLSearchParams();
       if (lat && lng) {
-        url += `?lat=${lat}&lng=${lng}&radius=${radius}`;
+        params.append('lat', lat);
+        params.append('lng', lng);
+        params.append('radius', radius);
+      }
+      if (vehicleType) {
+        params.append('vehicleType', vehicleType);
+      }
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
       }
       const response = await api.get(url);
       return response.data;
@@ -14,44 +24,24 @@ export const parkingService = {
       throw error;
     }
   },
-
+  
   getParking: async (id) => {
-    try {
-      const response = await api.get(`/parking/${id}`);
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching parking:', error);
-      throw error;
-    }
+    const response = await api.get(`/parking/${id}`);
+    return response.data;
   },
-
+  
   addParking: async (parkingData) => {
-    try {
-      const response = await api.post('/parking', parkingData);
-      return response.data;
-    } catch (error) {
-      console.error('Error adding parking:', error);
-      throw error;
-    }
+    const response = await api.post('/parking', parkingData);
+    return response.data;
   },
-
+  
   updateParking: async (id, parkingData) => {
-    try {
-      const response = await api.put(`/parking/${id}`, parkingData);
-      return response.data;
-    } catch (error) {
-      console.error('Error updating parking:', error);
-      throw error;
-    }
+    const response = await api.put(`/parking/${id}`, parkingData);
+    return response.data;
   },
-
+  
   getMyParkings: async () => {
-    try {
-      const response = await api.get('/parking/owner/my-parkings');
-      return response.data;
-    } catch (error) {
-      console.error('Error fetching my parkings:', error);
-      throw error;
-    }
+    const response = await api.get('/parking/owner/my-parkings');
+    return response.data;
   },
 };

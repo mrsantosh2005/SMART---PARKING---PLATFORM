@@ -13,7 +13,7 @@ const bookingSchema = new mongoose.Schema({
   },
   vehicleType: {
     type: String,
-    enum: ['car', 'bike'],
+    enum: ['car', 'bike', 'hatchback', 'sedan', 'suv', 'scooter', 'bus', 'truck', 'ev'],
     required: true,
   },
   vehicleNumber: {
@@ -45,33 +45,20 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'completed', 'refunded'],
     default: 'pending',
   },
-  // QR Code related fields
-  qrCode: {
-    type: String,
-    default: null,
-  },
-  qrCodeData: {
-    type: String,
-    default: null,
-  },
-  verifiedAt: {
-    type: Date,
-    default: null,
-  },
-  verifiedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    default: null,
-  },
+  
+  // Reminder Fields
+  reminder30MinSent: { type: Boolean, default: false },
+  reminder15MinSent: { type: Boolean, default: false },
+  extendRequested: { type: Boolean, default: false },
+  extendDuration: { type: Number, default: 0 },
+  trafficAlertSent: { type: Boolean, default: false },
+  isRecurring: { type: Boolean, default: false },
+  recurringId: { type: mongoose.Schema.Types.ObjectId, ref: 'RecurringBooking', default: null },
+  
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
-
-// Index for faster queries
-bookingSchema.index({ userId: 1, createdAt: -1 });
-bookingSchema.index({ parkingId: 1, createdAt: -1 });
-bookingSchema.index({ status: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -1,45 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import { parkingService } from '../../services/parkingService';
-import { FaCar, FaMotorcycle, FaMapMarkerAlt, FaDollarSign, FaSearch, FaShieldAlt } from 'react-icons/fa';
+import { FaCar, FaMotorcycle, FaBus, FaTruck, FaChargingStation, FaMapMarkerAlt, FaDollarSign, FaSearch } from 'react-icons/fa';
 import { BiCurrentLocation } from 'react-icons/bi';
 import toast from 'react-hot-toast';
 
-// Helper function to get verified badge
-const getVerifiedBadge = (owner) => {
-  if (!owner?.isVerified) return null;
-  
-  const badges = {
-    platinum: { color: 'bg-purple-100 text-purple-800', icon: '👑', text: 'Platinum Verified' },
-    gold: { color: 'bg-yellow-100 text-yellow-800', icon: '🥇', text: 'Gold Verified' },
-    silver: { color: 'bg-gray-100 text-gray-800', icon: '🥈', text: 'Silver Verified' },
-    basic: { color: 'bg-blue-100 text-blue-800', icon: '✅', text: 'Verified' }
-  };
-  
-  const badge = badges[owner.verifiedBadge] || badges.basic;
-  
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${badge.color}`}>
-      <span>{badge.icon}</span> {badge.text}
-    </span>
-  );
-};
+const vehicleFilters = [
+  { value: 'car', label: '🚗 Car', icon: FaCar },
+  { value: 'bike', label: '🏍️ Bike', icon: FaMotorcycle },
+  { value: 'suv', label: '🚙 SUV', icon: FaCar },
+  { value: 'bus', label: '🚌 Bus', icon: FaBus },
+  { value: 'truck', label: '🚛 Truck', icon: FaTruck },
+  { value: 'ev', label: '⚡ EV', icon: FaChargingStation },
+];
 
 const ParkingList = () => {
   const [parkings, setParkings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchLocation, setSearchLocation] = useState('');
+  const [selectedVehicle, setSelectedVehicle] = useState('car');
   const [radius, setRadius] = useState(5000);
 
   useEffect(() => {
     loadParkings();
-  }, []);
+  }, [selectedVehicle]);
 
   const loadParkings = async (lat, lng) => {
     try {
       setLoading(true);
-      const data = await parkingService.getParkings(lat, lng, radius);
+      const data = await parkingService.getParkings(lat, lng, radius, selectedVehicle);
       setParkings(data.data);
     } catch (error) {
       toast.error('Failed to load parkings');
@@ -48,16 +36,12 @@ const ParkingList = () => {
     }
   };
 
-  const handleSearch = () => loadParkings(40.7128, -74.0060);
-  
   const getUserLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => loadParkings(position.coords.latitude, position.coords.longitude),
         () => toast.error('Unable to get your location')
       );
-    } else {
-      toast.error('Geolocation not supported');
     }
   };
 
@@ -70,123 +54,93 @@ const ParkingList = () => {
   }
 
   return (
-    <motion.div 
-      className="container mx-auto px-4 py-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
-      <h1 className="text-4xl font-bold text-center mb-8 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-        Find Parking Near You
-      </h1>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Find Parking Near You</h1>
 
-      {/* Search Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-6 mb-8">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <FaMapMarkerAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Enter location or address"
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={searchLocation}
-              onChange={(e) => setSearchLocation(e.target.value)}
-            />
-          </div>
-          <div className="w-full md:w-48">
-            <select
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              value={radius}
-              onChange={(e) => setRadius(Number(e.target.value))}
-            >
-              <option value="1000">Within 1 km</option>
-              <option value="2000">Within 2 km</option>
-              <option value="5000">Within 5 km</option>
-              <option value="10000">Within 10 km</option>
-            </select>
-          </div>
-          <button
-            onClick={handleSearch}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 flex items-center justify-center gap-2"
-          >
-            <FaSearch /> Search
-          </button>
-          <button
-            onClick={getUserLocation}
-            className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 flex items-center justify-center gap-2"
-          >
-            <BiCurrentLocation /> My Location
-          </button>
+      {/* Vehicle Filter */}
+      <div className="bg-white rounded-xl shadow p-4 mb-6">
+        <p className="text-sm text-gray-600 mb-3">Select your vehicle type:</p>
+        <div className="flex flex-wrap gap-3">
+          {vehicleFilters.map((filter) => {
+            const Icon = filter.icon;
+            return (
+              <button
+                key={filter.value}
+                onClick={() => setSelectedVehicle(filter.value)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full transition ${
+                  selectedVehicle === filter.value
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Icon className="text-lg" />
+                <span>{filter.label}</span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Parking Grid */}
+      {/* Search Bar */}
+      <div className="bg-white rounded-xl shadow p-4 mb-8">
+        <div className="flex gap-4">
+          <button onClick={getUserLocation} className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center gap-2">
+            <BiCurrentLocation /> Use My Location
+          </button>
+          <select value={radius} onChange={(e) => setRadius(Number(e.target.value))} className="border rounded-lg px-4 py-2">
+            <option value="1000">1 km</option>
+            <option value="2000">2 km</option>
+            <option value="5000">5 km</option>
+            <option value="10000">10 km</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Parking Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {parkings.map((parking) => (
-          <div key={parking._id} className="bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300">
+          <div key={parking._id} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition">
             <div className="p-5">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-xl font-bold text-gray-800">{parking.name}</h3>
-                {/* ✅ Verified Badge Display */}
-                {getVerifiedBadge(parking.ownerId)}
+                <h3 className="text-xl font-bold">{parking.name}</h3>
+                {parking.hasEVCharging && (
+                  <span className="bg-green-100 text-green-600 text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                    <FaChargingStation /> EV
+                  </span>
+                )}
               </div>
               
-              <div className="flex items-center text-gray-500 text-sm mb-4">
-                <FaMapMarkerAlt className="mr-1 flex-shrink-0" />
+              <div className="flex items-center text-gray-500 text-sm mb-3">
+                <FaMapMarkerAlt className="mr-1" />
                 <span>{parking.address}</span>
               </div>
 
-              {/* Slot Availability */}
-              <div className="flex justify-between mb-4">
-                <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 rounded-full">
-                  <FaCar className="text-blue-600" />
-                  <span className="text-sm font-medium">{parking.availableCarSlots}/{parking.totalCarSlots}</span>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1 bg-green-50 rounded-full">
-                  <FaMotorcycle className="text-green-600" />
-                  <span className="text-sm font-medium">{parking.availableBikeSlots}/{parking.totalBikeSlots}</span>
+              {/* Availability by Vehicle Type */}
+              <div className="mb-3">
+                <p className="text-sm text-gray-600">Available slots:</p>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  {parking.supportedVehicles?.slice(0, 4).map(v => (
+                    <span key={v} className="text-xs bg-gray-100 px-2 py-1 rounded-full">{v}</span>
+                  ))}
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mb-4">
+              {/* Price */}
+              <div className="flex items-center justify-between mt-3 pt-3 border-t">
                 <div className="flex items-center">
                   <FaDollarSign className="text-yellow-600" />
-                  <span className="text-2xl font-bold text-blue-600">₹{parking.pricePerHour}</span>
+                  <span className="text-2xl font-bold text-blue-600">₹{parking.priceForVehicle || parking.basePricePerHour}</span>
                   <span className="text-gray-500">/hour</span>
                 </div>
-                {/* Trust Badge */}
-                {parking.ownerId?.isVerified && (
-                  <div className="flex items-center gap-1 text-xs text-green-600">
-                    <FaShieldAlt /> Trusted
-                  </div>
-                )}
+                <Link to={`/parking/${parking._id}`} className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700">
+                  Book Now →
+                </Link>
               </div>
-
-              <Link
-                to={`/parking/${parking._id}`}
-                className="block w-full text-center bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300"
-              >
-                View Details →
-              </Link>
             </div>
           </div>
         ))}
       </div>
-
-      {parkings.length === 0 && (
-        <div className="text-center py-12">
-          <div className="text-6xl mb-4">🅿️</div>
-          <p className="text-gray-500 text-lg">No parking spaces found in this area.</p>
-          <p className="text-gray-400 text-sm mt-2">Only verified parking owners are shown here.</p>
-          <button
-            onClick={getUserLocation}
-            className="mt-4 inline-block bg-blue-600 text-white px-6 py-2 rounded-lg"
-          >
-            Try My Location
-          </button>
-        </div>
-      )}
-    </motion.div>
+    </div>
   );
 };
 
