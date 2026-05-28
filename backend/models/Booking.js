@@ -14,6 +14,7 @@ const bookingSchema = new mongoose.Schema({
   vehicleType: {
     type: String,
     enum: ['car', 'bike', 'hatchback', 'sedan', 'suv', 'scooter', 'bus', 'truck', 'ev'],
+    default: 'car',
     required: true,
   },
   vehicleNumber: {
@@ -45,20 +46,14 @@ const bookingSchema = new mongoose.Schema({
     enum: ['pending', 'completed', 'refunded'],
     default: 'pending',
   },
-  
-  // Reminder Fields
-  reminder30MinSent: { type: Boolean, default: false },
-  reminder15MinSent: { type: Boolean, default: false },
-  extendRequested: { type: Boolean, default: false },
-  extendDuration: { type: Number, default: 0 },
-  trafficAlertSent: { type: Boolean, default: false },
-  isRecurring: { type: Boolean, default: false },
-  recurringId: { type: mongoose.Schema.Types.ObjectId, ref: 'RecurringBooking', default: null },
-  
   createdAt: {
     type: Date,
     default: Date.now,
   },
 });
+
+bookingSchema.index({ userId: 1, createdAt: -1 });
+bookingSchema.index({ parkingId: 1, createdAt: -1 });
+bookingSchema.index({ startTime: 1 });
 
 module.exports = mongoose.model('Booking', bookingSchema);

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
 import { useAuth } from '../../context/AuthContext';
-import { FaCar, FaMotorcycle, FaMapMarkerAlt, FaDollarSign, FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaCar, FaMotorcycle, FaMapMarkerAlt, FaDollarSign, FaInfoCircle } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
 const ParkingDetail = () => {
@@ -18,9 +18,14 @@ const ParkingDetail = () => {
     startTime: '',
     endTime: '',
   });
+  const [minDateTime, setMinDateTime] = useState('');
 
   useEffect(() => {
     loadParking();
+    // Set minimum date to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    setMinDateTime(now.toISOString().slice(0, 16));
   }, [id]);
 
   const loadParking = async () => {
@@ -36,58 +41,77 @@ const ParkingDetail = () => {
   };
 
   const handleChange = (e) => {
-    setBookingData({
-      ...bookingData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    setBookingData(prev => ({ ...prev, [name]: value }));
   };
 
   const calculateHours = () => {
     if (bookingData.startTime && bookingData.endTime) {
       const start = new Date(bookingData.startTime);
       const end = new Date(bookingData.endTime);
-      const hours = Math.ceil((end - start) / (1000 * 60 * 60));
-      return hours > 0 ? hours : 0;
+      const diffMs = end - start;
+      if (diffMs <= 0) return 0;
+      return Math.ceil(diffMs / (1000 * 60 * 60));
     }
     return 0;
   };
 
   const calculateTotal = () => {
     const hours = calculateHours();
-    return hours * parking.pricePerHour;
+    return hours * (parking?.basePricePerHour || 0);
   };
 
   const handleBooking = async (e) => {
     e.preventDefault();
 
     if (!user) {
-      toast.error('Please login to book a parking slot');
+      toast.error('Please login to book');
       navigate('/login');
       return;
     }
 
     if (user.role !== 'user') {
-      toast.error('Only users can book parking slots');
+      toast.error('Only users can book parking');
       return;
     }
 
-    const hours = calculateHours();
-    if (hours <= 0) {
-      toast.error('Please select valid start and end times');
+    if (!bookingData.vehicleNumber.trim()) {
+      toast.error('Please enter vehicle number');
+      return;
+    }
+
+    if (!bookingData.startTime || !bookingData.endTime) {
+      toast.error('Please select start and end time');
+      return;
+    }
+
+    const start = new Date(bookingData.startTime);
+    const end = new Date(bookingData.endTime);
+    const now = new Date();
+
+    if (start < now) {
+      toast.error('Start time cannot be in the past');
+      return;
+    }
+
+    if (end <= start) {
+      toast.error('End time must be after start time');
       return;
     }
 
     try {
-      const bookingPayload = {
+      const response = await bookingService.createBooking({
         parkingId: id,
-        ...bookingData,
-        startTime: new Date(bookingData.startTime).toISOString(),
-        endTime: new Date(bookingData.endTime).toISOString(),
-      };
+        vehicleType: bookingData.vehicleType,
+        vehicleNumber: bookingData.vehicleNumber.toUpperCase(),
+        startTime: bookingData.startTime,
+        endTime: bookingData.endTime,
+      });
 
-      await bookingService.createBooking(bookingPayload);
-      toast.success('Booking confirmed successfully!');
-      navigate('/user/bookings');
+      if (response.success) {
+        toast.success('Booking confirmed!');
+        navigate('/user/bookings');
+      }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Booking failed');
     }
@@ -102,11 +126,7 @@ const ParkingDetail = () => {
   }
 
   if (!parking) {
-    return (
-      <div className="text-center py-12">
-        <p className="text-gray-500 text-lg">Parking not found</p>
-      </div>
-    );
+    return <div className="text-center py-12">Parking not found</div>;
   }
 
   return (
@@ -116,7 +136,7 @@ const ParkingDetail = () => {
           <h1 className="text-3xl font-bold mb-4">{parking.name}</h1>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {/* Left Column - Parking Info */}
+            {/* Left Column - Info */}
             <div>
               <div className="flex items-start mb-4">
                 <FaMapMarkerAlt className="text-gray-500 mt-1 mr-2" />
@@ -125,135 +145,92 @@ const ParkingDetail = () => {
 
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <FaCar className="text-blue-600 mr-2" />
-                    <span className="font-semibold">Car Slots</span>
-                  </div>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {parking.availableCarSlots}/{parking.totalCarSlots}
-                  </p>
-                  <p className="text-sm text-gray-600">Available</p>
+                  <FaCar className="text-blue-600 text-2xl mb-2" />
+                  <p className="text-2xl font-bold">{parking.availableCarSlots}/{parking.totalCarSlots}</p>
+                  <p className="text-sm">Car Slots Available</p>
                 </div>
-
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <div className="flex items-center mb-2">
-                    <FaMotorcycle className="text-green-600 mr-2" />
-                    <span className="font-semibold">Bike Slots</span>
-                  </div>
-                  <p className="text-2xl font-bold text-green-600">
-                    {parking.availableBikeSlots}/{parking.totalBikeSlots}
-                  </p>
-                  <p className="text-sm text-gray-600">Available</p>
+                  <FaMotorcycle className="text-green-600 text-2xl mb-2" />
+                  <p className="text-2xl font-bold">{parking.availableBikeSlots}/{parking.totalBikeSlots}</p>
+                  <p className="text-sm">Bike Slots Available</p>
                 </div>
               </div>
 
-              <div className="bg-yellow-50 p-4 rounded-lg mb-6">
-                <div className="flex items-center mb-2">
-                  <FaDollarSign className="text-yellow-600 mr-2" />
-                  <span className="font-semibold">Price</span>
-                </div>
-                <p className="text-2xl font-bold text-yellow-600">
-                  ₹{parking.pricePerHour}
-                </p>
+              <div className="bg-yellow-50 p-4 rounded-lg">
+                <p className="text-2xl font-bold text-yellow-600">₹{parking.basePricePerHour}/hour</p>
+                <p className="text-sm">Price per hour</p>
               </div>
             </div>
 
             {/* Right Column - Booking Form */}
             <div>
-              <h2 className="text-2xl font-bold mb-4">Book a Slot</h2>
+              <h2 className="text-2xl font-bold mb-4">Book This Slot</h2>
               <form onSubmit={handleBooking} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Type
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="vehicleType"
-                        value="car"
-                        checked={bookingData.vehicleType === 'car'}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      <FaCar className="text-blue-600 mr-1" />
-                      Car
+                  <label className="block text-sm font-medium mb-2">Vehicle Type</label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center gap-2">
+                      <input type="radio" name="vehicleType" value="car" checked={bookingData.vehicleType === 'car'} onChange={handleChange} />
+                      <FaCar /> Car
                     </label>
-                    <label className="flex items-center">
-                      <input
-                        type="radio"
-                        name="vehicleType"
-                        value="bike"
-                        checked={bookingData.vehicleType === 'bike'}
-                        onChange={handleChange}
-                        className="mr-2"
-                      />
-                      <FaMotorcycle className="text-green-600 mr-1" />
-                      Bike
+                    <label className="flex items-center gap-2">
+                      <input type="radio" name="vehicleType" value="bike" checked={bookingData.vehicleType === 'bike'} onChange={handleChange} />
+                      <FaMotorcycle /> Bike
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Vehicle Number
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Vehicle Number</label>
                   <input
                     type="text"
                     name="vehicleNumber"
                     value={bookingData.vehicleNumber}
                     onChange={handleChange}
+                    placeholder="MH12AB1234"
+                    className="w-full px-4 py-2 border rounded-lg"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., ABC-1234"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Start Time
-                  </label>
+                  <label className="block text-sm font-medium mb-2">Start Time</label>
                   <input
                     type="datetime-local"
                     name="startTime"
                     value={bookingData.startTime}
                     onChange={handleChange}
+                    min={minDateTime}
+                    className="w-full px-4 py-2 border rounded-lg"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    End Time
-                  </label>
+                  <label className="block text-sm font-medium mb-2">End Time</label>
                   <input
                     type="datetime-local"
                     name="endTime"
                     value={bookingData.endTime}
                     onChange={handleChange}
+                    className="w-full px-4 py-2 border rounded-lg"
                     required
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
 
-                {bookingData.startTime && bookingData.endTime && (
+                {calculateHours() > 0 && (
                   <div className="bg-gray-50 p-4 rounded-lg">
-                    <div className="flex justify-between mb-2">
-                      <span>Duration:</span>
-                      <span className="font-semibold">{calculateHours()} hours</span>
-                    </div>
-                    <div className="flex justify-between text-lg font-bold">
-                      <span>Total Amount:</span>
-                      <span className="text-blue-600">${calculateTotal()}</span>
-                    </div>
+                    <p>Duration: {calculateHours()} hour(s)</p>
+                    <p className="text-xl font-bold">Total: ₹{calculateTotal()}</p>
                   </div>
                 )}
 
-                <button
-                  type="submit"
-                  className="w-full bg-blue-600 text-white py-3 rounded-md hover:bg-blue-700 transition-colors font-semibold"
-                >
+                <div className="bg-blue-50 p-3 rounded-lg flex gap-2">
+                  <FaInfoCircle className="text-blue-500" />
+                  <p className="text-sm text-blue-700">Slot will be held for 15 minutes after start time</p>
+                </div>
+
+                <button type="submit" className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
                   Confirm Booking
                 </button>
               </form>
