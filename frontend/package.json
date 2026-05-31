@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "24.x"
+    "node": "20.x"
   },
   "dependencies": {
     "react": "^18.2.0",
@@ -14,7 +14,8 @@
     "date-fns": "^2.30.0",
     "react-icons": "^4.11.0",
     "react-scripts": "5.0.1",
-    "framer-motion": "^10.16.4"
+    "framer-motion": "^10.16.4",
+    "qrcode": "^1.5.3"
   },
   "scripts": {
     "start": "react-scripts start",
