@@ -29,7 +29,7 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    console.log(`✅ Response: ${response.status}`);
+    // console.log(`✅ Response: ${response.status}`);
     return response;
   },
   (error) => {

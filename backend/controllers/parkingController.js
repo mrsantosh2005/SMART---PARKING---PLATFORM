@@ -6,7 +6,7 @@ const User = require('../models/User');
 // @access  Private (Owner only)
 exports.addParking = async (req, res) => {
   try {
-    console.log('Received body:', req.body);
+    // console.log('Received body:', req.body);
     
     const {
       name,

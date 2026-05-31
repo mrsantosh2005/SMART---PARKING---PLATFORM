@@ -4,7 +4,7 @@ export const bookingService = {
   // Create new booking
   createBooking: async (bookingData) => {
     try {
-      console.log('Sending booking data to backend:', bookingData);
+      // console.log('Sending booking data to backend:', bookingData);
       
       const payload = {
         parkingId: bookingData.parkingId,
@@ -16,7 +16,7 @@ export const bookingService = {
       };
       
       const response = await api.post('/bookings', payload);
-      console.log('Booking response:', response.data);
+      // console.log('Booking response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error creating booking:', error.response?.data || error.message);

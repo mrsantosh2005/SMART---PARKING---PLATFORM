@@ -11,8 +11,8 @@ const sendReminder = async (booking, type) => {
     
     if (!user || !parking) return false;
     
-    console.log(`📧 Reminder to ${user.email}: ${type} for booking ${booking._id}`);
-    console.log(`   Parking: ${parking.name}, Time: ${new Date(booking.startTime).toLocaleString()}`);
+    // console.log(`📧 Reminder to ${user.email}: ${type} for booking ${booking._id}`);
+    // console.log(`   Parking: ${parking.name}, Time: ${new Date(booking.startTime).toLocaleString()}`);
     
     // In production, integrate with actual APIs:
     // - Email: nodemailer

@@ -14,7 +14,7 @@ exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
-    console.log('📝 Registration:', { name, email, role });
+    // console.log('📝 Registration:', { name, email, role });
 
     // Check if user exists
     const userExists = await User.findOne({ email });
@@ -63,7 +63,7 @@ exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    console.log('🔐 Login:', email);
+    // console.log('🔐 Login:', email);
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {

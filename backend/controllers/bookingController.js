@@ -8,7 +8,7 @@ exports.createBooking = async (req, res) => {
   try {
     const { parkingId, vehicleType, vehicleNumber, startTime, endTime, totalAmount } = req.body;
 
-    console.log('📝 Creating booking:', { parkingId, vehicleType, vehicleNumber, startTime, endTime, totalAmount });
+    // console.log('📝 Creating booking:', { parkingId, vehicleType, vehicleNumber, startTime, endTime, totalAmount });
 
     if (!parkingId || !vehicleType || !vehicleNumber || !startTime || !endTime) {
       return res.status(400).json({
@@ -86,7 +86,7 @@ exports.createBooking = async (req, res) => {
     }
     await parking.save();
 
-    console.log('✅ Booking created:', booking._id, 'Amount:', finalAmount);
+    // console.log('✅ Booking created:', booking._id, 'Amount:', finalAmount);
 
     res.status(201).json({
       success: true,
@@ -111,7 +111,7 @@ exports.getMyBookings = async (req, res) => {
       .populate('parkingId', 'name address basePricePerHour pricePerHour')
       .sort('-createdAt');
 
-    console.log(`📋 Found ${bookings.length} bookings for user ${req.user.id}`);
+    // console.log(`📋 Found ${bookings.length} bookings for user ${req.user.id}`);
 
     res.status(200).json({
       success: true,
@@ -134,9 +134,9 @@ exports.getParkingBookings = async (req, res) => {
   try {
     const { parkingId } = req.params;
     
-    console.log('🔍 Fetching bookings for parking:', parkingId);
-    console.log('User ID:', req.user.id);
-    console.log('User Role:', req.user.role);
+    // console.log('🔍 Fetching bookings for parking:', parkingId);
+    // console.log('User ID:', req.user.id);
+    // console.log('User Role:', req.user.role);
 
     // Check if parking exists
     const parking = await Parking.findById(parkingId);
@@ -148,8 +148,8 @@ exports.getParkingBookings = async (req, res) => {
       });
     }
 
-    console.log('Parking owner:', parking.ownerId.toString());
-    console.log('Request user:', req.user.id);
+    // console.log('Parking owner:', parking.ownerId.toString());
+    // console.log('Request user:', req.user.id);
 
     // Check authorization
     if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
@@ -164,7 +164,7 @@ exports.getParkingBookings = async (req, res) => {
       .populate('userId', 'name email phone')
       .sort('-createdAt');
 
-    console.log(`✅ Found ${bookings.length} bookings for parking ${parkingId}`);
+    // console.log(`✅ Found ${bookings.length} bookings for parking ${parkingId}`);
 
     res.status(200).json({
       success: true,

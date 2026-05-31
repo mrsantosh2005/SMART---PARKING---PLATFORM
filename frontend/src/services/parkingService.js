@@ -40,9 +40,9 @@ export const parkingService = {
   // Add new parking
   addParking: async (parkingData) => {
     try {
-      console.log('Adding parking with data:', parkingData);
+      // console.log('Adding parking with data:', parkingData);
       const response = await api.post('/parking', parkingData);
-      console.log('Add parking response:', response.data);
+      // console.log('Add parking response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error adding parking:', error.response?.data || error.message);
