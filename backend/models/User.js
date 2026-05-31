@@ -36,11 +36,11 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please provide a phone number'],
   },
   
-  // ========== KYC FIELDS ==========
+  // KYC Fields
   kycStatus: {
     type: String,
-    enum: ['pending', 'submitted', 'verified', 'rejected'],
-    default: 'pending'
+    enum: ['pending', 'submitted', 'verified', 'rejected', 'not_submitted'],
+    default: 'not_submitted'
   },
   kycSubmittedAt: {
     type: Date,
@@ -71,29 +71,25 @@ const userSchema = new mongoose.Schema({
       name: { type: String, default: null },
       frontImage: { type: String, default: null },
       backImage: { type: String, default: null },
-      verified: { type: Boolean, default: false },
-      verifiedAt: { type: Date, default: null }
+      verified: { type: Boolean, default: false }
     },
     panCard: {
       number: { type: String, default: null },
       name: { type: String, default: null },
       image: { type: String, default: null },
-      verified: { type: Boolean, default: false },
-      verifiedAt: { type: Date, default: null }
+      verified: { type: Boolean, default: false }
     },
     gstCertificate: {
       number: { type: String, default: null },
       businessName: { type: String, default: null },
       image: { type: String, default: null },
-      verified: { type: Boolean, default: false },
-      verifiedAt: { type: Date, default: null }
+      verified: { type: Boolean, default: false }
     },
     propertyProof: {
-      type: { type: String, enum: ['rent_agreement', 'ownership_deed', 'shop_license', 'other'], default: null },
+      type: { type: String, default: null },
       documentNumber: { type: String, default: null },
       image: { type: String, default: null },
-      verified: { type: Boolean, default: false },
-      verifiedAt: { type: Date, default: null }
+      verified: { type: Boolean, default: false }
     }
   },
   
@@ -103,17 +99,13 @@ const userSchema = new mongoose.Schema({
   },
 });
 
-// Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
-    return next();
-  }
+  if (!this.isModified('password')) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
 
-// Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
   return await bcrypt.compare(candidatePassword, this.password);
 };

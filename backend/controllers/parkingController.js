@@ -191,11 +191,31 @@ exports.updateParking = async (req, res) => {
       });
     }
 
+    // Check ownership
     if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(403).json({
         success: false,
         error: 'Not authorized to update this parking',
       });
+    }
+
+    const { totalCarSlots, totalBikeSlots, basePricePerHour } = req.body;
+    
+    // Update car slots
+    if (totalCarSlots !== undefined) {
+      const difference = totalCarSlots - parking.totalCarSlots;
+      req.body.availableCarSlots = Math.max(0, parking.availableCarSlots + difference);
+    }
+    
+    // Update bike slots
+    if (totalBikeSlots !== undefined) {
+      const difference = totalBikeSlots - parking.totalBikeSlots;
+      req.body.availableBikeSlots = Math.max(0, parking.availableBikeSlots + difference);
+    }
+    
+    // ✅ Update price - IMPORTANT FIX
+    if (basePricePerHour !== undefined) {
+      req.body.basePricePerHour = parseFloat(basePricePerHour);
     }
 
     parking = await Parking.findByIdAndUpdate(req.params.id, req.body, {
@@ -205,6 +225,7 @@ exports.updateParking = async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'Parking updated successfully',
       data: parking,
     });
   } catch (error) {
@@ -215,7 +236,6 @@ exports.updateParking = async (req, res) => {
     });
   }
 };
-
 // @desc    Delete parking
 // @route   DELETE /api/parking/:id
 // @access  Private (Owner only)

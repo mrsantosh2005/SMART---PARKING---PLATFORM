@@ -6,11 +6,10 @@ const Parking = require('../models/Parking');
 // @access  Private
 exports.createBooking = async (req, res) => {
   try {
-    const { parkingId, vehicleType, vehicleNumber, startTime, endTime } = req.body;
+    const { parkingId, vehicleType, vehicleNumber, startTime, endTime, totalAmount } = req.body;
 
-    console.log('📝 Creating booking:', { parkingId, vehicleType, vehicleNumber, startTime, endTime });
+    console.log('📝 Creating booking:', { parkingId, vehicleType, vehicleNumber, startTime, endTime, totalAmount });
 
-    // Validation
     if (!parkingId || !vehicleType || !vehicleNumber || !startTime || !endTime) {
       return res.status(400).json({
         success: false,
@@ -18,7 +17,6 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Get parking
     const parking = await Parking.findById(parkingId);
     if (!parking) {
       return res.status(404).json({
@@ -42,7 +40,6 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Validate dates
     const start = new Date(startTime);
     const end = new Date(endTime);
     const now = new Date();
@@ -61,11 +58,14 @@ exports.createBooking = async (req, res) => {
       });
     }
 
-    // Calculate amount
-    const hours = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60)));
-    const totalAmount = hours * parking.basePricePerHour;
+    // Calculate amount if not provided
+    let finalAmount = totalAmount;
+    if (!finalAmount || finalAmount === 0) {
+      const hours = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60)));
+      const pricePerHour = parking.basePricePerHour || parking.pricePerHour || 50;
+      finalAmount = hours * pricePerHour;
+    }
 
-    // Create booking
     const booking = await Booking.create({
       userId: req.user.id,
       parkingId,
@@ -73,7 +73,7 @@ exports.createBooking = async (req, res) => {
       vehicleNumber: vehicleNumber.toUpperCase(),
       startTime: start,
       endTime: end,
-      totalAmount,
+      totalAmount: finalAmount,
       status: 'confirmed',
       paymentStatus: 'pending',
     });
@@ -86,7 +86,7 @@ exports.createBooking = async (req, res) => {
     }
     await parking.save();
 
-    console.log('✅ Booking created:', booking._id);
+    console.log('✅ Booking created:', booking._id, 'Amount:', finalAmount);
 
     res.status(201).json({
       success: true,
@@ -108,8 +108,10 @@ exports.createBooking = async (req, res) => {
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ userId: req.user.id })
-      .populate('parkingId', 'name address pricePerHour basePricePerHour')
+      .populate('parkingId', 'name address basePricePerHour pricePerHour')
       .sort('-createdAt');
+
+    console.log(`📋 Found ${bookings.length} bookings for user ${req.user.id}`);
 
     res.status(200).json({
       success: true,
@@ -118,6 +120,59 @@ exports.getMyBookings = async (req, res) => {
     });
   } catch (error) {
     console.error('Get bookings error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to get bookings'
+    });
+  }
+};
+
+// ✅ @desc    Get parking bookings (for owner)
+// ✅ @route   GET /api/bookings/parking/:parkingId
+// ✅ @access  Private (Owner only)
+exports.getParkingBookings = async (req, res) => {
+  try {
+    const { parkingId } = req.params;
+    
+    console.log('🔍 Fetching bookings for parking:', parkingId);
+    console.log('User ID:', req.user.id);
+    console.log('User Role:', req.user.role);
+
+    // Check if parking exists
+    const parking = await Parking.findById(parkingId);
+    if (!parking) {
+      console.log('❌ Parking not found:', parkingId);
+      return res.status(404).json({
+        success: false,
+        error: 'Parking not found'
+      });
+    }
+
+    console.log('Parking owner:', parking.ownerId.toString());
+    console.log('Request user:', req.user.id);
+
+    // Check authorization
+    if (parking.ownerId.toString() !== req.user.id && req.user.role !== 'admin') {
+      console.log('❌ Unauthorized access');
+      return res.status(403).json({
+        success: false,
+        error: 'Not authorized to view these bookings'
+      });
+    }
+
+    const bookings = await Booking.find({ parkingId })
+      .populate('userId', 'name email phone')
+      .sort('-createdAt');
+
+    console.log(`✅ Found ${bookings.length} bookings for parking ${parkingId}`);
+
+    res.status(200).json({
+      success: true,
+      count: bookings.length,
+      data: bookings
+    });
+  } catch (error) {
+    console.error('Get parking bookings error:', error);
     res.status(500).json({
       success: false,
       error: error.message || 'Failed to get bookings'
@@ -160,7 +215,6 @@ exports.cancelBooking = async (req, res) => {
       });
     }
 
-    // Free up the slot
     const parking = await Parking.findById(booking.parkingId);
     if (parking) {
       if (booking.vehicleType === 'bike') {

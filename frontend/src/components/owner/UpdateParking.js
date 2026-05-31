@@ -14,7 +14,7 @@ const UpdateParking = () => {
     address: '',
     totalCarSlots: '',
     totalBikeSlots: '',
-    pricePerHour: '',
+    basePricePerHour: '',
     availableCarSlots: '',
     availableBikeSlots: '',
   });
@@ -38,7 +38,7 @@ const UpdateParking = () => {
         address: parking.address || '',
         totalCarSlots: parking.totalCarSlots || 0,
         totalBikeSlots: parking.totalBikeSlots || 0,
-        pricePerHour: parking.pricePerHour || 0,
+        basePricePerHour: parking.basePricePerHour || 0,
         availableCarSlots: parking.availableCarSlots || 0,
         availableBikeSlots: parking.availableBikeSlots || 0,
       });
@@ -64,25 +64,21 @@ const UpdateParking = () => {
     setSubmitting(true);
 
     try {
+      // ✅ Include basePricePerHour in update
       const updateData = {
         totalCarSlots: parseInt(formData.totalCarSlots),
         totalBikeSlots: parseInt(formData.totalBikeSlots),
-        pricePerHour: parseFloat(formData.pricePerHour),
+        basePricePerHour: parseFloat(formData.basePricePerHour),
       };
+
+      console.log('Updating parking with data:', updateData);
 
       await parkingService.updateParking(id, updateData);
       toast.success('Parking updated successfully!');
       navigate('/owner/dashboard');
     } catch (error) {
       console.error('Update error:', error);
-      
-      if (error.response) {
-        toast.error(error.response.data?.error || 'Failed to update parking');
-      } else if (error.request) {
-        toast.error('No response from server. Check your connection.');
-      } else {
-        toast.error(error.message || 'Failed to update parking');
-      }
+      toast.error(error.response?.data?.error || 'Failed to update parking');
     } finally {
       setSubmitting(false);
     }
@@ -97,31 +93,29 @@ const UpdateParking = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 py-8 px-4">
       <div className="container mx-auto max-w-2xl">
         {/* Back Button */}
         <button
           onClick={() => navigate('/owner/dashboard')}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-800 mb-6 transition"
+          className="flex items-center gap-2 text-gray-400 hover:text-white mb-6 transition"
         >
           <FaArrowLeft /> Back to Dashboard
         </button>
 
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800">✏️ Update Parking</h1>
-          <p className="text-gray-600 mt-1">Update your parking slot details</p>
+          <h1 className="text-3xl font-bold text-white">✏️ Update Parking</h1>
+          <p className="text-gray-400 mt-1">Update your parking slot details</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8">
+        <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 md:p-8 border border-white/20">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Parking Name (Read Only) */}
             <div>
-              <label className="block text-gray-700 font-semibold mb-2">
-                Parking Name
-              </label>
-              <div className="flex items-center gap-2 p-3 bg-gray-100 rounded-xl text-gray-600">
+              <label className="block text-gray-300 font-semibold mb-2">Parking Name</label>
+              <div className="flex items-center gap-2 p-3 bg-white/5 rounded-xl text-gray-300">
                 <FaMapMarkerAlt className="text-blue-500" />
                 <span>{formData.name}</span>
               </div>
@@ -129,34 +123,51 @@ const UpdateParking = () => {
 
             {/* Address (Read Only) */}
             <div>
-              <label className="block text-gray-700 font-semibold mb-2">
-                Address
-              </label>
-              <div className="p-3 bg-gray-100 rounded-xl text-gray-600">
+              <label className="block text-gray-300 font-semibold mb-2">Address</label>
+              <div className="p-3 bg-white/5 rounded-xl text-gray-300">
                 {formData.address}
               </div>
             </div>
 
             {/* Current Slots Info */}
-            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-50 rounded-xl">
+            <div className="grid grid-cols-2 gap-4 p-4 bg-blue-500/10 rounded-xl">
               <div>
-                <p className="text-sm text-gray-600">Current Car Slots</p>
-                <p className="text-lg font-semibold text-blue-600">
+                <p className="text-sm text-gray-400">Current Car Slots</p>
+                <p className="text-lg font-semibold text-blue-400">
                   Available: {formData.availableCarSlots} / Total: {formData.totalCarSlots}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Current Bike Slots</p>
-                <p className="text-lg font-semibold text-green-600">
+                <p className="text-sm text-gray-400">Current Bike Slots</p>
+                <p className="text-lg font-semibold text-green-400">
                   Available: {formData.availableBikeSlots} / Total: {formData.totalBikeSlots}
                 </p>
               </div>
             </div>
 
+            {/* ✅ PRICE FIELD - IMPORTANT */}
+            <div>
+              <label className="block text-gray-300 font-semibold mb-2">
+                <FaDollarSign className="inline mr-2 text-yellow-500" />
+                Price per Hour (₹) *
+              </label>
+              <input
+                type="number"
+                step="0.5"
+                name="basePricePerHour"
+                value={formData.basePricePerHour}
+                onChange={handleChange}
+                min="0"
+                required
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-sm text-gray-500 mt-1">Set the hourly parking rate</p>
+            </div>
+
             {/* Total Car Slots */}
             <div>
-              <label className="block text-gray-700 font-semibold mb-2">
-                <FaCar className="inline mr-2 text-blue-600" />
+              <label className="block text-gray-300 font-semibold mb-2">
+                <FaCar className="inline mr-2 text-blue-500" />
                 Total Car Slots
               </label>
               <input
@@ -166,17 +177,15 @@ const UpdateParking = () => {
                 onChange={handleChange}
                 min="0"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                Current available: {formData.availableCarSlots} car slots
-              </p>
+              <p className="text-sm text-gray-500 mt-1">Increase or decrease car parking capacity</p>
             </div>
 
             {/* Total Bike Slots */}
             <div>
-              <label className="block text-gray-700 font-semibold mb-2">
-                <FaMotorcycle className="inline mr-2 text-green-600" />
+              <label className="block text-gray-300 font-semibold mb-2">
+                <FaMotorcycle className="inline mr-2 text-green-500" />
                 Total Bike Slots
               </label>
               <input
@@ -186,25 +195,7 @@ const UpdateParking = () => {
                 onChange={handleChange}
                 min="0"
                 required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Price */}
-            <div>
-              <label className="block text-gray-700 font-semibold mb-2">
-                <FaDollarSign className="inline mr-2 text-yellow-600" />
-                Price per Hour (₹)
-              </label>
-              <input
-                type="number"
-                name="pricePerHour"
-                value={formData.pricePerHour}
-                onChange={handleChange}
-                min="0"
-                step="0.5"
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
@@ -213,7 +204,7 @@ const UpdateParking = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="flex-1 bg-blue-600 text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3 rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 transition disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {submitting ? (
                   <>
@@ -229,7 +220,7 @@ const UpdateParking = () => {
               <button
                 type="button"
                 onClick={() => navigate('/owner/dashboard')}
-                className="px-6 py-3 bg-gray-200 text-gray-700 rounded-xl font-semibold hover:bg-gray-300 transition flex items-center gap-2"
+                className="px-6 py-3 bg-white/10 border border-white/20 rounded-xl text-gray-300 font-semibold hover:bg-white/20 transition flex items-center gap-2"
               >
                 <FaTimes /> Cancel
               </button>

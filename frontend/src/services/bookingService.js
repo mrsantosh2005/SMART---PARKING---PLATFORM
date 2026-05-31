@@ -1,9 +1,21 @@
 import api from './api';
 
 export const bookingService = {
+  // Create new booking
   createBooking: async (bookingData) => {
     try {
-      const response = await api.post('/bookings', bookingData);
+      console.log('Sending booking data to backend:', bookingData);
+      
+      const payload = {
+        parkingId: bookingData.parkingId,
+        vehicleType: bookingData.vehicleType,
+        vehicleNumber: bookingData.vehicleNumber,
+        startTime: bookingData.startTime,
+        endTime: bookingData.endTime,
+        totalAmount: bookingData.totalAmount || 0,
+      };
+      
+      const response = await api.post('/bookings', payload);
       console.log('Booking response:', response.data);
       return response.data;
     } catch (error) {
@@ -12,6 +24,7 @@ export const bookingService = {
     }
   },
 
+  // Get user's bookings
   getMyBookings: async () => {
     try {
       const response = await api.get('/bookings/my-bookings');
@@ -22,6 +35,18 @@ export const bookingService = {
     }
   },
 
+  // Get parking bookings (owner only)
+  getParkingBookings: async (parkingId) => {
+    try {
+      const response = await api.get(`/bookings/parking/${parkingId}`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching parking bookings:', error);
+      throw error;
+    }
+  },
+
+  // Cancel booking
   cancelBooking: async (bookingId) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/cancel`);
@@ -32,6 +57,7 @@ export const bookingService = {
     }
   },
 
+  // Complete booking (owner only)
   completeBooking: async (bookingId) => {
     try {
       const response = await api.put(`/bookings/${bookingId}/complete`);
@@ -40,5 +66,5 @@ export const bookingService = {
       console.error('Error completing booking:', error);
       throw error;
     }
-  }
+  },
 };

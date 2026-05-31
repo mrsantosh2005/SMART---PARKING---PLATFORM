@@ -1,25 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { FaUsers, FaUserTie, FaParking, FaDollarSign, FaCheck, FaIdCard, FaUserCheck, FaClock, FaEye, FaTimes, FaFileAlt, FaBuilding, FaHome } from 'react-icons/fa';
 import { adminService } from '../../services/adminService';
-import { 
-  FaUsers, 
-  FaUserTie, 
-  FaParking, 
-  FaCalendarCheck, 
-  FaDollarSign, 
-  FaCheck, 
-  FaIdCard, 
-  FaShieldAlt,
-  FaUserCheck,
-  FaClock,
-  FaMoneyBillWave
-} from 'react-icons/fa';
+import { kycService } from '../../services/kycService';
 import toast from 'react-hot-toast';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState(null);
   const [pendingOwners, setPendingOwners] = useState([]);
+  const [pendingKYC, setPendingKYC] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('kyc');
+  const [selectedKYC, setSelectedKYC] = useState(null);
+  const [rejectionReason, setRejectionReason] = useState('');
+  const [selectedBadge, setSelectedBadge] = useState('basic');
 
   useEffect(() => {
     loadData();
@@ -27,14 +20,15 @@ const AdminDashboard = () => {
 
   const loadData = async () => {
     try {
-      const [statsData, pendingData] = await Promise.all([
+      const [statsData, pendingData, kycData] = await Promise.all([
         adminService.getStats(),
         adminService.getPendingOwners(),
+        kycService.getPendingKYC()
       ]);
       setStats(statsData.data);
       setPendingOwners(pendingData.data);
+      setPendingKYC(kycData.data);
     } catch (error) {
-      console.error('Error loading data:', error);
       toast.error('Failed to load dashboard data');
     } finally {
       setLoading(false);
@@ -51,196 +45,177 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleViewKYCDetails = async (userId) => {
+    try {
+      const response = await kycService.getKYCDetails(userId);
+      setSelectedKYC(response.data);
+    } catch (error) {
+      toast.error('Failed to load KYC details');
+    }
+  };
+
+  const handleVerifyKYC = async (approved) => {
+    try {
+      await kycService.verifyKYC(selectedKYC._id, approved, rejectionReason, selectedBadge);
+      toast.success(approved ? 'KYC approved!' : 'KYC rejected');
+      setSelectedKYC(null);
+      loadData();
+    } catch (error) {
+      toast.error('Failed to process KYC');
+    }
+  };
+
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
   }
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-      <p className="text-gray-500 mb-8">Manage platform, users, and KYC verification</p>
+      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
 
-      {/* ========== ADMIN NAVIGATION CARDS ========== */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        
-        {/* ✅ KYC Verification Card */}
-        <Link 
-          to="/admin/kyc"
-          className="group bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-white/20 p-3 rounded-full">
-              <FaIdCard className="text-2xl" />
-            </div>
-            <span className="text-purple-200 text-sm">Admin Only</span>
-          </div>
-          <h3 className="text-xl font-bold mb-1">KYC Verification</h3>
-          <p className="text-purple-100 text-sm mb-3">Verify owner documents</p>
-          <div className="flex items-center gap-1 text-purple-200 text-sm">
-            <span>Review & Approve</span>
-            <span>→</span>
-          </div>
-        </Link>
-
-        {/* User Management Card */}
-        <Link 
-          to="/admin/users"
-          className="group bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-white/20 p-3 rounded-full">
-              <FaUsers className="text-2xl" />
-            </div>
-            <span className="text-blue-200 text-sm">Total: {stats?.totalUsers || 0}</span>
-          </div>
-          <h3 className="text-xl font-bold mb-1">User Management</h3>
-          <p className="text-blue-100 text-sm mb-3">View all users</p>
-          <div className="flex items-center gap-1 text-blue-200 text-sm">
-            <span>Manage Users</span>
-            <span>→</span>
-          </div>
-        </Link>
-
-        {/* Parking Management Card */}
-        <Link 
-          to="/admin/parkings"
-          className="group bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-white/20 p-3 rounded-full">
-              <FaParking className="text-2xl" />
-            </div>
-            <span className="text-green-200 text-sm">Total: {stats?.totalParkings || 0}</span>
-          </div>
-          <h3 className="text-xl font-bold mb-1">Parking Management</h3>
-          <p className="text-green-100 text-sm mb-3">View all parkings</p>
-          <div className="flex items-center gap-1 text-green-200 text-sm">
-            <span>View Locations</span>
-            <span>→</span>
-          </div>
-        </Link>
-
-        {/* Bookings Card */}
-        <Link 
-          to="/admin/bookings"
-          className="group bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl shadow-lg p-6 text-white hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-        >
-          <div className="flex items-center justify-between mb-3">
-            <div className="bg-white/20 p-3 rounded-full">
-              <FaCalendarCheck className="text-2xl" />
-            </div>
-            <span className="text-orange-200 text-sm">Total: {stats?.totalBookings || 0}</span>
-          </div>
-          <h3 className="text-xl font-bold mb-1">Bookings</h3>
-          <p className="text-orange-100 text-sm mb-3">View all bookings</p>
-          <div className="flex items-center gap-1 text-orange-200 text-sm">
-            <span>View History</span>
-            <span>→</span>
-          </div>
-        </Link>
-      </div>
-
-      {/* ========== STATISTICS CARDS ========== */}
+      {/* Stats */}
       {stats && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-blue-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Total Revenue</p>
-                <p className="text-2xl font-bold text-gray-800">₹{stats.totalRevenue || 0}</p>
-              </div>
-              <FaMoneyBillWave className="text-3xl text-green-500 opacity-50" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-green-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Active Bookings</p>
-                <p className="text-2xl font-bold text-gray-800">{stats.activeBookings || 0}</p>
-              </div>
-              <FaCalendarCheck className="text-3xl text-blue-500 opacity-50" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-purple-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Completed Bookings</p>
-                <p className="text-2xl font-bold text-gray-800">{stats.completedBookings || 0}</p>
-              </div>
-              <FaCheck className="text-3xl text-green-500 opacity-50" />
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-md p-5 border-l-4 border-yellow-500">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-500 text-sm">Pending Owners</p>
-                <p className="text-2xl font-bold text-gray-800">{pendingOwners.length}</p>
-              </div>
-              <FaUserTie className="text-3xl text-yellow-500 opacity-50" />
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="bg-blue-500 rounded-xl p-6 text-white"><div><p className="text-sm">Total Users</p><p className="text-3xl font-bold">{stats.totalUsers}</p></div></div>
+          <div className="bg-green-500 rounded-xl p-6 text-white"><div><p className="text-sm">Total Owners</p><p className="text-3xl font-bold">{stats.totalOwners}</p></div></div>
+          <div className="bg-purple-500 rounded-xl p-6 text-white"><div><p className="text-sm">Total Parkings</p><p className="text-3xl font-bold">{stats.totalParkings}</p></div></div>
+          <div className="bg-yellow-500 rounded-xl p-6 text-white"><div><p className="text-sm">Total Revenue</p><p className="text-3xl font-bold">₹{stats.totalRevenue}</p></div></div>
         </div>
       )}
 
-      {/* ========== PENDING OWNER APPROVALS (REGULAR) ========== */}
-      {pendingOwners.length > 0 && (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden mb-8">
-          <div className="px-6 py-4 bg-yellow-50 border-b border-yellow-200">
-            <div className="flex items-center gap-2">
-              <FaClock className="text-yellow-600" />
-              <h2 className="text-xl font-semibold text-yellow-800">
-                Pending Owner Approvals ({pendingOwners.length})
-              </h2>
+      {/* Tabs */}
+      <div className="flex gap-2 mb-6 border-b">
+        <button onClick={() => setActiveTab('kyc')} className={`px-6 py-2 ${activeTab === 'kyc' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}>KYC Verification ({pendingKYC.length})</button>
+        <button onClick={() => setActiveTab('owner')} className={`px-6 py-2 ${activeTab === 'owner' ? 'border-b-2 border-blue-600 text-blue-600' : 'text-gray-500'}`}>Owner Approval ({pendingOwners.length})</button>
+      </div>
+
+      {/* KYC Tab */}
+      {activeTab === 'kyc' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Pending KYC Submissions</h2>
+          {pendingKYC.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No pending KYC submissions</div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {pendingKYC.map((owner) => (
+                <div key={owner._id} className="bg-white rounded-xl shadow p-4 border">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="font-semibold text-lg">{owner.name}</h3>
+                      <p className="text-gray-600">{owner.email}</p>
+                      <p className="text-gray-500 text-sm">{owner.phone}</p>
+                    </div>
+                    <button onClick={() => handleViewKYCDetails(owner._id)} className="px-3 py-1 bg-blue-500 text-white rounded-lg text-sm flex items-center gap-1"><FaEye /> View Details</button>
+                  </div>
+                  
+                  {/* Document Status Badges */}
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {owner.documents?.aadhar?.submitted && <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">✅ Aadhar</span>}
+                    {owner.documents?.pan?.submitted && <span className="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">✅ PAN</span>}
+                    {owner.documents?.gst?.submitted && <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">📄 GST</span>}
+                    {owner.documents?.property?.submitted && <span className="text-xs bg-purple-100 text-purple-600 px-2 py-1 rounded">🏠 Property</span>}
+                  </div>
+                  
+                  <div className="mt-2 text-xs text-gray-400">Submitted: {new Date(owner.kycSubmittedAt).toLocaleDateString()}</div>
+                </div>
+              ))}
             </div>
-            <p className="text-sm text-yellow-600 mt-1">New owners waiting for approval</p>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Phone</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Registered</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Action</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {pendingOwners.map((owner) => (
-                  <tr key={owner._id} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">{owner.name}</div>
-                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{owner.email}</div>
-                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{owner.phone}</div>
-                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {new Date(owner.createdAt).toLocaleDateString()}
-                      </div>
-                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <button
-                        onClick={() => handleApproveOwner(owner._id)}
-                        className="flex items-center gap-1 px-3 py-1 bg-green-500 text-white rounded-md hover:bg-green-600 transition"
-                      >
-                        <FaCheck /> Approve
-                      </button>
-                     </td>
-                   </tr>
-                ))}
-              </tbody>
-            </table>
+          )}
+        </div>
+      )}
+
+      {/* Owner Approval Tab */}
+      {activeTab === 'owner' && (
+        <div className="space-y-4">
+          <h2 className="text-xl font-semibold">Pending Owner Approvals</h2>
+          {pendingOwners.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">No pending owner approvals</div>
+          ) : (
+            pendingOwners.map((owner) => (
+              <div key={owner._id} className="bg-white rounded-xl shadow p-4 flex justify-between items-center">
+                <div><h3 className="font-semibold">{owner.name}</h3><p>{owner.email}</p><p>{owner.phone}</p></div>
+                <button onClick={() => handleApproveOwner(owner._id)} className="px-4 py-2 bg-green-500 text-white rounded-lg flex items-center gap-2"><FaCheck /> Approve Owner</button>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* KYC Details Modal */}
+      {selectedKYC && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">KYC Details</h2>
+              <button onClick={() => setSelectedKYC(null)} className="text-gray-500 hover:text-gray-700">✕</button>
+            </div>
+            
+            {/* Owner Info */}
+            <div className="bg-gray-50 p-4 rounded-lg mb-4">
+              <p><strong>Name:</strong> {selectedKYC.name}</p>
+              <p><strong>Email:</strong> {selectedKYC.email}</p>
+              <p><strong>Phone:</strong> {selectedKYC.phone}</p>
+              <p><strong>Submitted:</strong> {new Date(selectedKYC.kycSubmittedAt).toLocaleString()}</p>
+            </div>
+            
+            {/* Aadhar Details */}
+            {selectedKYC.documents?.aadhar?.submitted && (
+              <div className="border p-4 rounded-lg mb-3">
+                <h3 className="font-semibold flex items-center gap-2"><FaIdCard className="text-blue-600" /> Aadhar Card</h3>
+                <p>Number: {selectedKYC.documents.aadhar.number}</p>
+                <p>Name: {selectedKYC.documents.aadhar.name}</p>
+              </div>
+            )}
+            
+            {/* PAN Details */}
+            {selectedKYC.documents?.pan?.submitted && (
+              <div className="border p-4 rounded-lg mb-3">
+                <h3 className="font-semibold flex items-center gap-2"><FaFileAlt className="text-orange-600" /> PAN Card</h3>
+                <p>Number: {selectedKYC.documents.pan.number}</p>
+                <p>Name: {selectedKYC.documents.pan.name}</p>
+              </div>
+            )}
+            
+            {/* GST Details */}
+            {selectedKYC.documents?.gst?.submitted && (
+              <div className="border p-4 rounded-lg mb-3">
+                <h3 className="font-semibold flex items-center gap-2"><FaBuilding className="text-green-600" /> GST Certificate</h3>
+                <p>Number: {selectedKYC.documents.gst.number}</p>
+                <p>Business: {selectedKYC.documents.gst.businessName}</p>
+              </div>
+            )}
+            
+            {/* Property Details */}
+            {selectedKYC.documents?.property?.submitted && (
+              <div className="border p-4 rounded-lg mb-3">
+                <h3 className="font-semibold flex items-center gap-2"><FaHome className="text-purple-600" /> Property Proof</h3>
+                <p>Type: {selectedKYC.documents.property.type}</p>
+                <p>Document Number: {selectedKYC.documents.property.documentNumber}</p>
+              </div>
+            )}
+            
+            {/* Badge Selection */}
+            <div className="mt-4">
+              <label className="font-semibold">Verification Badge</label>
+              <select value={selectedBadge} onChange={(e) => setSelectedBadge(e.target.value)} className="w-full border rounded-lg p-2 mt-1">
+                <option value="basic">Basic 🥉</option>
+                <option value="silver">Silver 🥈</option>
+                <option value="gold">Gold 🥇</option>
+                <option value="platinum">Platinum 👑</option>
+              </select>
+            </div>
+            
+            {/* Rejection Reason */}
+            <div className="mt-3">
+              <label className="font-semibold">Rejection Reason (if rejecting)</label>
+              <textarea value={rejectionReason} onChange={(e) => setRejectionReason(e.target.value)} className="w-full border rounded-lg p-2 mt-1" rows="2" placeholder="Enter reason for rejection..."></textarea>
+            </div>
+            
+            {/* Action Buttons */}
+            <div className="flex gap-3 mt-6">
+              <button onClick={() => handleVerifyKYC(true)} className="flex-1 bg-green-600 text-white py-2 rounded-lg hover:bg-green-700 flex items-center justify-center gap-2"><FaCheck /> Approve KYC</button>
+              <button onClick={() => handleVerifyKYC(false)} className="flex-1 bg-red-600 text-white py-2 rounded-lg hover:bg-red-700 flex items-center justify-center gap-2"><FaTimes /> Reject</button>
+            </div>
           </div>
         </div>
       )}

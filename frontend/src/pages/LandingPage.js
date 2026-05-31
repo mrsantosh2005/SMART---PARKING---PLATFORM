@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaParking, FaArrowRight, FaUserPlus, FaSignInAlt, FaShieldAlt, FaStar } from 'react-icons/fa';
+import { FaParking, FaArrowRight, FaUserPlus, FaSignInAlt, FaShieldAlt, FaStar, FaPhone, FaEnvelope, FaMapMarkerAlt, FaFacebook, FaInstagram, FaTwitter, FaLinkedin, FaGithub } from 'react-icons/fa';
 
 const LandingPage = () => {
   return (
@@ -16,16 +16,10 @@ const LandingPage = () => {
         </div>
         
         <div className="flex space-x-3">
-          <Link 
-            to="/login" 
-            className="px-5 py-2 border border-white/30 rounded-xl text-white hover:bg-white/10 transition flex items-center gap-2"
-          >
+          <Link to="/login" className="px-5 py-2 border border-white/30 rounded-xl text-white hover:bg-white/10 transition flex items-center gap-2">
             <FaSignInAlt /> Login
           </Link>
-          <Link 
-            to="/register" 
-            className="px-5 py-2 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition flex items-center gap-2"
-          >
+          <Link to="/register" className="px-5 py-2 bg-blue-600 rounded-xl text-white hover:bg-blue-700 transition flex items-center gap-2">
             <FaUserPlus /> Sign Up
           </Link>
         </div>
@@ -33,13 +27,10 @@ const LandingPage = () => {
 
       {/* ========== HERO SECTION ========== */}
       <div className="flex flex-col items-center justify-center text-center px-4 py-16 md:py-20">
-        
-        {/* Badge */}
         <div className="inline-flex items-center bg-yellow-500/20 backdrop-blur-sm rounded-full px-4 py-2 mb-6 border border-yellow-400/30">
           <span className="text-yellow-300 text-sm font-medium">⚠️ STOP GETTING PARKING CHALLANS!</span>
         </div>
 
-        {/* Main Heading */}
         <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
           Stop Wasting Hours<br />
           <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
@@ -47,25 +38,16 @@ const LandingPage = () => {
           </span>
         </h1>
 
-        {/* Subheading */}
         <p className="text-lg md:text-xl text-gray-300 max-w-2xl mb-10 px-4">
           Book safe, verified parking spots at homes, shops, and offices near you. 
           No more circling, no more challans, no more stress.
         </p>
 
-        {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-4">
-          <Link 
-            to="/register" 
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition transform hover:scale-105 flex items-center justify-center gap-2 group"
-          >
-            Find Parking Now 
-            <FaArrowRight className="group-hover:translate-x-1 transition" />
+          <Link to="/register" className="px-8 py-4 bg-gradient-to-r from-blue-600 to-blue-700 rounded-xl text-white font-semibold text-lg hover:from-blue-700 hover:to-blue-800 transition transform hover:scale-105 flex items-center justify-center gap-2 group">
+            Find Parking Now <FaArrowRight className="group-hover:translate-x-1 transition" />
           </Link>
-          <Link 
-            to="/register?role=owner" 
-            className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white font-semibold text-lg hover:bg-white/20 transition flex items-center justify-center gap-2"
-          >
+          <Link to="/register?role=owner" className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 rounded-xl text-white font-semibold text-lg hover:bg-white/20 transition flex items-center justify-center gap-2">
             List Your Space → Earn ₹10k/month
           </Link>
         </div>
@@ -99,21 +81,18 @@ const LandingPage = () => {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Step 1 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
               <div className="text-4xl text-blue-400 mb-4">📍</div>
               <h3 className="text-xl font-bold text-white mb-2">1. Find a Spot</h3>
               <p className="text-gray-400">Search by location, see available spots near you</p>
             </div>
             
-            {/* Step 2 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
               <div className="text-4xl text-blue-400 mb-4">📅</div>
               <h3 className="text-xl font-bold text-white mb-2">2. Book Instantly</h3>
               <p className="text-gray-400">Reserve your spot with secure payment</p>
             </div>
             
-            {/* Step 3 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 text-center border border-white/10">
               <div className="text-4xl text-blue-400 mb-4">🅿️</div>
               <h3 className="text-xl font-bold text-white mb-2">3. Park Safely</h3>
@@ -132,7 +111,7 @@ const LandingPage = () => {
                 Turn Your Empty Space into <span className="text-green-400">Passive Income</span>
               </h2>
               <p className="text-gray-300 text-lg mb-6">
-                Have a driveway, empty plot, or shopfront? List it on ParkShare and earn ₹40,000+ per month!
+                Have a driveway, empty plot, or shopfront? List it on ParkShare and earn ₹10,000+ per month!
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-gray-300">
@@ -148,10 +127,7 @@ const LandingPage = () => {
                   <span className="text-green-500 text-xl">✓</span> Verified guests only - 100% secure
                 </li>
               </ul>
-              <Link 
-                to="/register?role=owner"
-                className="inline-flex items-center gap-2 px-8 py-4 bg-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition transform hover:scale-105"
-              >
+              <Link to="/register?role=owner" className="inline-flex items-center gap-2 px-8 py-4 bg-green-600 rounded-xl text-white font-semibold hover:bg-green-700 transition transform hover:scale-105">
                 Start Earning Today <FaArrowRight />
               </Link>
             </div>
@@ -163,7 +139,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm">Average Monthly Earnings</p>
-                  <p className="text-3xl font-bold text-white">₹40,500</p>
+                  <p className="text-3xl font-bold text-white">₹12,500</p>
                 </div>
               </div>
               <div className="h-32 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
@@ -183,7 +159,6 @@ const LandingPage = () => {
           </h2>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Testimonial 1 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => <FaStar key={i} className="text-yellow-500" />)}
@@ -193,7 +168,6 @@ const LandingPage = () => {
               <p className="text-gray-500 text-sm">Daily Commuter</p>
             </div>
             
-            {/* Testimonial 2 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => <FaStar key={i} className="text-yellow-500" />)}
@@ -203,7 +177,6 @@ const LandingPage = () => {
               <p className="text-gray-500 text-sm">Homeowner</p>
             </div>
             
-            {/* Testimonial 3 */}
             <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/10">
               <div className="flex gap-1 mb-4">
                 {[...Array(5)].map((_, i) => <FaStar key={i} className="text-yellow-500" />)}
@@ -216,29 +189,48 @@ const LandingPage = () => {
         </div>
       </div>
 
-      {/* ========== CTA SECTION ========== */}
+      {/* ========== CONTACT SECTION - YOUR DETAILS ========== */}
       <div className="py-16 px-4">
         <div className="container mx-auto max-w-4xl">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-12 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-              Ready to Stop Wasting Time?
-            </h2>
-            <p className="text-blue-100 text-lg mb-8">
-              Join thousands of drivers who found their perfect parking spot
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                to="/register"
-                className="px-8 py-4 bg-white text-blue-600 rounded-xl font-semibold hover:bg-gray-100 transition transform hover:scale-105"
-              >
-                Find Parking Now
-              </Link>
-              <Link 
-                to="/register?role=owner"
-                className="px-8 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-xl text-white font-semibold hover:bg-white/30 transition"
-              >
-                List Your Space
-              </Link>
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 md:p-12">
+            <div className="text-center mb-8">
+              <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">Get in Touch</h2>
+              <p className="text-blue-100 text-lg">Have questions? We'd love to hear from you!</p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Phone */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center hover:bg-white/20 transition">
+                <div className="bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FaPhone className="text-white text-xl" />
+                </div>
+                <h3 className="text-white font-semibold mb-2">Phone</h3>
+                <a href="tel:+919975579204" className="text-blue-200 hover:text-white transition">
+                  +91 99755 79204
+                </a>
+              </div>
+
+              {/* Email */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center hover:bg-white/20 transition">
+                <div className="bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FaEnvelope className="text-white text-xl" />
+                </div>
+                <h3 className="text-white font-semibold mb-2">Email</h3>
+                <a href="mailto:schintawar80@gmail.com" className="text-blue-200 hover:text-white transition">
+                  schintawar80@gmail.com
+                </a>
+              </div>
+
+              {/* Address */}
+              <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-5 text-center hover:bg-white/20 transition">
+                <div className="bg-blue-500 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <FaMapMarkerAlt className="text-white text-xl" />
+                </div>
+                <h3 className="text-white font-semibold mb-2">Address</h3>
+                <p className="text-blue-200">
+                  kolhapur, Maharashtra, India
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -276,15 +268,18 @@ const LandingPage = () => {
             </div>
             
             <div>
-              <h4 className="text-white font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2 text-gray-500 text-sm">
-                <li>📞 +91 12345 67890</li>
-                <li>✉️ hello@parkshare.com</li>
-              </ul>
+              <h4 className="text-white font-semibold mb-4">Follow Us</h4>
+              <div className="flex gap-4">
+                <a href="https://www.facebook.com/share/1AxT7i99zK/" className="text-gray-400 hover:text-white transition text-xl"><FaFacebook /></a>
+                <a href="https://www.instagram.com/santosh_chintawar_?igsh=MWk0azZjMWJyYm9tbg==" className="text-gray-400 hover:text-white transition text-xl"><FaInstagram /></a>
+                <a href="https://x.com/schintawar7" className="text-gray-400 hover:text-white transition text-xl"><FaTwitter /></a>
+                <a href="https://www.linkedin.com/in/santosh-chintawar-67314128a/" className="text-gray-400 hover:text-white transition text-xl"><FaLinkedin /></a>
+                <a href="https://github.com/mrsantosh2005" className="text-gray-400 hover:text-white transition text-xl"><FaGithub /></a>
+              </div>
             </div>
           </div>
           <div className="text-center text-gray-600 text-sm pt-8 border-t border-white/10">
-            © 2025 ParkShare. All rights reserved.
+            © 2025 ParkShare. All rights reserved. | Made with ❤️ in India
           </div>
         </div>
       </footer>

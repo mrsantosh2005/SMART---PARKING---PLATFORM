@@ -7,37 +7,38 @@ const generateToken = (id) => {
   });
 };
 
+// @desc    Register user
+// @route   POST /api/auth/register
+// @access  Public
 exports.register = async (req, res) => {
   try {
     const { name, email, password, phone, role } = req.body;
 
+    console.log('📝 Registration:', { name, email, role });
+
+    // Check if user exists
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({
         success: false,
-        error: 'User already exists',
+        error: 'User already exists'
       });
     }
 
+    // Create user
     const user = await User.create({
       name,
       email,
       password,
       phone,
       role: role || 'user',
-      isApproved: role === 'owner' ? false : true
     });
 
     const token = generateToken(user._id);
 
-    const message = role === 'owner' 
-      ? 'Owner registered successfully! Please wait for admin approval.'
-      : 'Registration successful!';
-
     res.status(201).json({
       success: true,
       token,
-      message,
       user: {
         id: user._id,
         name: user.name,
@@ -55,9 +56,14 @@ exports.register = async (req, res) => {
   }
 };
 
+// @desc    Login user
+// @route   POST /api/auth/login
+// @access  Public
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
+
+    console.log('🔐 Login:', email);
 
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
@@ -97,6 +103,9 @@ exports.login = async (req, res) => {
   }
 };
 
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
 exports.getMe = async (req, res) => {
   try {
     const user = await User.findById(req.user.id);
