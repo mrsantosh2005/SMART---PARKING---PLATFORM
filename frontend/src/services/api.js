@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// ✅ API URL - reads from environment variable
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
 console.log('🌐 API URL:', API_URL);
@@ -32,9 +33,15 @@ api.interceptors.response.use(
     return response;
   },
   (error) => {
-    if (!error.response) {
+    if (error.code === 'ECONNABORTED') {
+      console.error('⏰ Request timeout - server not responding');
+    } else if (!error.response) {
       console.error('🔌 Network error - Cannot connect to server');
       console.error('   Please check if backend is running on:', API_URL);
+    } else if (error.response.status === 401) {
+      console.error('❌ Unauthorized - Please login again');
+      localStorage.removeItem('token');
+      window.location.href = '/login';
     } else {
       console.error(`❌ Error ${error.response.status}:`, error.response.data);
     }

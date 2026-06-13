@@ -3,26 +3,31 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "20.x"
+    "node": "18.x"
   },
   "dependencies": {
-    "axios": "^1.5.0",
-    "date-fns": "^2.30.0",
-    "framer-motion": "^10.16.4",
-    "qrcode": "^1.5.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
-    "react-hot-toast": "^2.4.1",
-    "react-icons": "^4.11.0",
-    "react-qr-scanner": "^1.0.0-alpha.11",
     "react-router-dom": "^6.15.0",
-    "react-scripts": "5.0.1"
+    "axios": "^1.5.0",
+    "react-hot-toast": "^2.4.1",
+    "date-fns": "^2.30.0",
+    "react-icons": "^4.11.0",
+    "framer-motion": "^10.16.4",
+    "qrcode": "^1.5.3",
+    "react-qr-scanner": "^1.0.0"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
+  },
+  "devDependencies": {
+    "react-scripts": "5.0.1",
+    "tailwindcss": "^3.3.3",
+    "postcss": "^8.4.29",
+    "autoprefixer": "^10.4.15"
   },
   "browserslist": {
     "production": [
@@ -35,10 +40,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "autoprefixer": "^10.4.15",
-    "postcss": "^8.4.29",
-    "tailwindcss": "^3.3.3"
   }
 }
