@@ -32,7 +32,7 @@ app.use(cors({
     if (allowedOrigins.indexOf(origin) !== -1) {
       return callback(null, true);
     } else {
-      console.warn(`Blocked origin: ${origin}`);
+      console.warn(`🚫 Blocked origin: ${origin}`);
       return callback(new Error('Not allowed by CORS'), false);
     }
   },
@@ -43,7 +43,7 @@ app.use(cors({
   optionsSuccessStatus: 200
 }));
 
-// Handle preflight requests
+// Handle preflight requests for all routes
 app.options('*', cors());
 
 // Body parser
@@ -68,7 +68,8 @@ app.get('/api/health', (req, res) => {
     status: 'ok', 
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
-    cors: 'enabled'
+    cors: 'enabled',
+    allowedOrigins: allowedOrigins
   });
 });
 
@@ -113,6 +114,7 @@ if (process.env.NODE_ENV !== 'production') {
   app.listen(PORT, () => {
     console.log(`✅ Server running on port ${PORT}`);
     console.log(`📍 API URL: http://localhost:${PORT}/api`);
+    console.log(`📍 Allowed origins: ${allowedOrigins.join(', ')}`);
   });
 }
 
