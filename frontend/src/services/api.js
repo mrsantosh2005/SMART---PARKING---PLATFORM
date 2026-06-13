@@ -2,13 +2,15 @@ import axios from 'axios';
 
 const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
 
+console.log('🌐 API URL:', API_URL);
+
 const api = axios.create({
   baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   },
+  timeout: 30000,
 });
-
 
 // Request interceptor
 api.interceptors.request.use(
@@ -26,14 +28,13 @@ api.interceptors.request.use(
 // Response interceptor
 api.interceptors.response.use(
   (response) => {
-    // console.log(`✅ Response: ${response.status}`);
+    console.log(`✅ Response: ${response.status}`);
     return response;
   },
   (error) => {
-    if (error.code === 'ECONNABORTED') {
-      console.error('⏰ Request timeout');
-    } else if (!error.response) {
+    if (!error.response) {
       console.error('🔌 Network error - Cannot connect to server');
+      console.error('   Please check if backend is running on:', API_URL);
     } else {
       console.error(`❌ Error ${error.response.status}:`, error.response.data);
     }

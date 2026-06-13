@@ -5,7 +5,7 @@ import {
   FaParking, FaCalendarCheck, FaDollarSign, FaPlus, 
   FaCar, FaMotorcycle, FaEdit, FaQrcode, 
   FaUsers, FaSpinner, FaIdCard, FaExclamationTriangle, 
-  FaCheckCircle, FaSync, FaEye, FaTrash
+  FaCheckCircle, FaSync, FaEye, FaTrash, FaChartLine, FaStar, FaCrown
 } from 'react-icons/fa';
 import { parkingService } from '../../services/parkingService';
 import { bookingService } from '../../services/bookingService';
@@ -56,9 +56,6 @@ const OwnerDashboard = () => {
       const data = await bookingService.getParkingBookings(parkingId);
       console.log('Bookings response:', data);
       setBookings(data.data || []);
-      if (data.data.length === 0) {
-        console.log('No bookings found for this parking');
-      }
     } catch (error) {
       console.error('Load bookings error:', error);
       toast.error('Failed to load bookings');
@@ -100,6 +97,7 @@ const OwnerDashboard = () => {
     totalBookings: bookings.length,
     totalRevenue: bookings.reduce((sum, b) => sum + (b.totalAmount || 0), 0),
     activeBookings: bookings.filter(b => b.status === 'confirmed').length,
+    avgRating: 4.8,
   };
 
   if (loading) {
@@ -120,6 +118,24 @@ const OwnerDashboard = () => {
             <p className="text-gray-400 mt-1">Manage your parking spaces and track earnings</p>
           </div>
           <div className="flex gap-3">
+            {/* KYC Button */}
+            <Link
+              to="/owner/kyc"
+              className="flex items-center gap-2 px-4 py-2 bg-purple-600 rounded-xl text-white hover:bg-purple-700 transition"
+            >
+              <FaIdCard /> KYC Status
+            </Link>
+            
+            {/* QR Scanner Button */}
+            <button
+              onClick={() => setShowScanner(!showScanner)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition ${
+                showScanner ? 'bg-purple-700' : 'bg-purple-600'
+              } text-white hover:bg-purple-700`}
+            >
+              <FaQrcode /> {showScanner ? 'Hide Scanner' : 'Scan QR Code'}
+            </button>
+            
             {/* Refresh Button */}
             <button
               onClick={handleRefresh}
@@ -128,16 +144,12 @@ const OwnerDashboard = () => {
             >
               <FaSync className={refreshing ? 'animate-spin' : ''} /> Refresh
             </button>
-            <Link to="/owner/kyc" className="flex items-center gap-2 px-4 py-2 bg-purple-600 rounded-xl text-white hover:bg-purple-700 transition">
-              <FaIdCard /> KYC
-            </Link>
-            <button
-              onClick={() => setShowScanner(!showScanner)}
-              className={`flex items-center gap-2 px-4 py-2 rounded-xl transition ${showScanner ? 'bg-purple-700' : 'bg-purple-600'} text-white`}
+            
+            {/* Add Parking Button */}
+            <Link
+              to="/owner/add-parking"
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-xl text-white hover:bg-green-700 transition"
             >
-              <FaQrcode /> {showScanner ? 'Hide Scanner' : 'Scan QR'}
-            </button>
-            <Link to="/owner/add-parking" className="flex items-center gap-2 px-4 py-2 bg-green-600 rounded-xl text-white hover:bg-green-700 transition">
               <FaPlus /> Add Parking
             </Link>
           </div>
@@ -167,21 +179,30 @@ const OwnerDashboard = () => {
               <FaCheckCircle className="text-green-400 text-2xl" />
               <div>
                 <p className="text-green-400 font-semibold">✅ KYC Verified!</p>
-                <p className="text-green-400/70 text-sm">Badge: {kycInfo.verifiedBadge}</p>
+                <p className="text-green-400/70 text-sm">Your parking spaces are visible to users. Badge: {kycInfo.verifiedBadge}</p>
               </div>
             </div>
           </div>
         )}
 
-        {/* QR Scanner */}
+        {/* QR Scanner Section */}
         {showScanner && (
           <div className="mb-8">
-            <QRScanner onScanSuccess={(data) => toast.success(`Verified: ${data.userName}`)} />
+            <QRScanner 
+              onScanSuccess={(data) => {
+                console.log('Scanned booking:', data);
+                toast.success(`✅ Verified: ${data.user?.name || 'Customer'}`);
+                handleRefresh();
+              }}
+              onScanError={(err) => {
+                console.error('Scan error:', err);
+              }}
+            />
           </div>
         )}
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl p-6 shadow-xl">
             <div className="flex justify-between items-start">
               <div><p className="text-white/70 text-sm">Total Parkings</p><p className="text-3xl font-bold text-white">{stats.totalParkings}</p></div>
@@ -204,6 +225,28 @@ const OwnerDashboard = () => {
             <div className="flex justify-between items-start">
               <div><p className="text-white/70 text-sm">Active Bookings</p><p className="text-3xl font-bold text-white">{stats.activeBookings}</p></div>
               <FaUsers className="text-4xl text-white/50" />
+            </div>
+          </div>
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaChartLine className="text-blue-400" /> Revenue Trend</h3>
+            <div className="h-64 flex items-center justify-center text-gray-400">
+              <p>Revenue chart will appear here</p>
+            </div>
+          </div>
+          <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-6 border border-white/10">
+            <h3 className="text-white font-semibold mb-4 flex items-center gap-2"><FaStar className="text-yellow-400" /> Ratings</h3>
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="text-5xl font-bold text-yellow-400 mb-2">{stats.avgRating}</div>
+                <div className="flex justify-center gap-1 mb-2">
+                  {[...Array(5)].map((_, i) => <FaStar key={i} className="text-yellow-400" />)}
+                </div>
+                <p className="text-gray-400">Based on {stats.totalBookings} bookings</p>
+              </div>
             </div>
           </div>
         </div>

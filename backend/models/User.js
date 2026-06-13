@@ -36,7 +36,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Please provide a phone number'],
   },
   
-  // KYC Fields
+  // ========== KYC FIELDS (Simplified) ==========
   kycStatus: {
     type: String,
     enum: ['pending', 'submitted', 'verified', 'rejected', 'not_submitted'],
@@ -64,34 +64,14 @@ const userSchema = new mongoose.Schema({
     default: 'none'
   },
   
-  // KYC Documents
-  kycDocuments: {
-    aadharCard: {
-      number: { type: String, default: null },
-      name: { type: String, default: null },
-      frontImage: { type: String, default: null },
-      backImage: { type: String, default: null },
-      verified: { type: Boolean, default: false }
-    },
-    panCard: {
-      number: { type: String, default: null },
-      name: { type: String, default: null },
-      image: { type: String, default: null },
-      verified: { type: Boolean, default: false }
-    },
-    gstCertificate: {
-      number: { type: String, default: null },
-      businessName: { type: String, default: null },
-      image: { type: String, default: null },
-      verified: { type: Boolean, default: false }
-    },
-    propertyProof: {
-      type: { type: String, default: null },
-      documentNumber: { type: String, default: null },
-      image: { type: String, default: null },
-      verified: { type: Boolean, default: false }
-    }
-  },
+  // KYC Documents - Simple fields
+  aadharNumber: { type: String, default: null },
+  aadharName: { type: String, default: null },
+  aadharFrontImage: { type: String, default: null },
+  aadharBackImage: { type: String, default: null },
+  panNumber: { type: String, default: null },
+  panName: { type: String, default: null },
+  panImage: { type: String, default: null },
   
   createdAt: {
     type: Date,

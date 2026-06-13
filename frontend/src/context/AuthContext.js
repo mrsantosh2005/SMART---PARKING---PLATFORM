@@ -38,9 +38,9 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('token', res.data.token);
         api.defaults.headers.common['Authorization'] = `Bearer ${res.data.token}`;
         setUser(res.data.user);
-        toast.success(res.data.message || 'Registration successful!');
+        toast.success('Registration successful!');
       } else {
-        toast.success(res.data.message || 'Owner registered! Wait for admin approval.');
+        toast.success('Owner registered! Wait for admin approval.');
       }
       
       return { success: true };
@@ -52,11 +52,9 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      console.log('Login attempt:', email);
+      console.log('🔐 Login attempt:', { email });
       
       const res = await api.post('/auth/login', { email, password });
-      
-      console.log('Login response:', res.data);
       
       if (res.data.success) {
         localStorage.setItem('token', res.data.token);
@@ -69,15 +67,16 @@ export const AuthProvider = ({ children }) => {
         return { success: false };
       }
     } catch (err) {
-      console.error('Login error:', err.response?.data || err.message);
+      console.error('❌ Login error:', err.response?.data || err.message);
       
       if (err.response?.status === 401) {
         toast.error('Invalid email or password');
       } else if (err.code === 'ERR_NETWORK') {
-        toast.error('Cannot connect to server. Make sure backend is running on port 5001');
+        toast.error('Cannot connect to server');
       } else {
         toast.error(err.response?.data?.error || 'Login failed');
       }
+      
       return { success: false };
     }
   };
