@@ -2,12 +2,9 @@ const express = require('express');
 const mongoose = require('mongoose');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const path = require('path');
 
-// Load env vars
 dotenv.config();
 
-// Import routes
 const authRoutes = require('./routes/authRoutes');
 const parkingRoutes = require('./routes/parkingRoutes');
 const bookingRoutes = require('./routes/bookingRoutes');
@@ -16,107 +13,41 @@ const kycRoutes = require('./routes/kycRoutes');
 
 const app = express();
 
-// ========== CORS CONFIGURATION - FIXED FOR DEPLOYMENT ==========
-const allowedOrigins = [
-  'http://localhost:3000',
-  'http://localhost:3001',
-  'https://smart-parking-platform-fl3p.vercel.app',
-  'https://smart-parking-frontend.vercel.app',
-  process.env.FRONTEND_URL
-].filter(Boolean);
-
+// CORS
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      return callback(null, true);
-    } else {
-      console.warn(`🚫 Blocked origin: ${origin}`);
-      return callback(new Error('Not allowed by CORS'), false);
-    }
-  },
+  origin: ['http://localhost:3000', 'http://localhost:3001'],
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
-  exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  optionsSuccessStatus: 200
 }));
 
-// Handle preflight requests for all routes
-app.options('*', cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Body parser
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Database connection
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log('✅ MongoDB Connected'))
+  .catch(err => console.error('MongoDB Error:', err));
 
-// ========== DATABASE CONNECTION ==========
-const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI);
-    console.log('✅ MongoDB Connected');
-  } catch (error) {
-    console.error('❌ MongoDB Error:', error.message);
-    process.exit(1);
-  }
-};
-connectDB();
-
-// ========== HEALTH CHECK ENDPOINTS ==========
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV,
-    cors: 'enabled',
-    allowedOrigins: allowedOrigins
-  });
-});
-
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'Smart Parking API is running',
-    version: '1.0.0',
-    endpoints: ['/api/auth', '/api/parking', '/api/bookings', '/api/admin', '/api/kyc']
-  });
-});
-
-// ========== API ROUTES ==========
-// ✅ All routes are correctly prefixed with /api
+// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/parking', parkingRoutes);
 app.use('/api/bookings', bookingRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/kyc', kycRoutes);
 
-// ========== 404 HANDLER ==========
-app.use('*', (req, res) => {
-  res.status(404).json({
-    success: false,
-    error: `Route ${req.originalUrl} not found`
-  });
+// Health check
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok' });
 });
 
-// ========== ERROR HANDLER ==========
+// Error handler
 app.use((err, req, res, next) => {
-  console.error('❌ Error:', err.message);
-  res.status(err.status || 500).json({
-    success: false,
-    error: err.message || 'Server Error'
-  });
+  console.error(err);
+  res.status(500).json({ success: false, error: err.message });
 });
 
-// ========== START SERVER ==========
+// Start server
 const PORT = process.env.PORT || 5001;
-
-// For local development
-if (process.env.NODE_ENV !== 'production') {
-  app.listen(PORT, () => {
-    console.log(`✅ Server running on port ${PORT}`);
-    console.log(`📍 API URL: http://localhost:${PORT}/api`);
-    console.log(`📍 Allowed origins: ${allowedOrigins.join(', ')}`);
-  });
-}
-
-// For Vercel serverless
-module.exports = app;
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
+  console.log(`📍 API URL: http://localhost:${PORT}/api`);
+});
