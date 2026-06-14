@@ -111,7 +111,7 @@ const LandingPage = () => {
                 Turn Your Empty Space into <span className="text-green-400">Passive Income</span>
               </h2>
               <p className="text-gray-300 text-lg mb-6">
-                Have a driveway, empty plot, or shopfront? List it on ParkShare and earn ₹10,000+ per month!
+                Have a driveway, empty plot, or shopfront? List it on ParkShare and earn ₹30,000+ per month!
               </p>
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-gray-300">
@@ -139,7 +139,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <p className="text-gray-400 text-sm">Average Monthly Earnings</p>
-                  <p className="text-3xl font-bold text-white">₹12,500</p>
+                  <p className="text-3xl font-bold text-white">₹30,000</p>
                 </div>
               </div>
               <div className="h-32 bg-gradient-to-r from-green-500/20 to-blue-500/20 rounded-lg flex items-center justify-center">
